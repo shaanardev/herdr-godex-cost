@@ -187,8 +187,11 @@ This Go implementation was developed with reference to
 The [pricing test fixture](internal/codex/testdata/pricing.json) records its
 source revision. This README describes this implementation in original wording.
 
-This repository does not currently include a `LICENSE` file. The referenced
-project also has no declared license as of November 5, 2026. Attribution alone
-does not establish permission to redistribute adapted material; provenance and
-reuse permissions need to be resolved before applying a project-wide open-source
-license.
+Original contributions are licensed under the [MIT License](LICENSE), which
+permits commercial use, modification, and redistribution subject to preserving
+its copyright and license notices.
+
+The referenced project has no declared license as of November 5, 2026. The
+pricing fixtures above retain their source attribution; permission to reuse
+upstream material remains unresolved. This project's MIT license does not grant
+rights to third-party material that its copyright holders have not licensed.
