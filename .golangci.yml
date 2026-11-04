@@ -1,0 +1,21 @@
+version: "2"
+
+run:
+  timeout: 3m
+
+linters:
+  # Keep the starting set focused on correctness and basic Go hygiene.
+  # Avoid broad style, naming, and complexity rules while this is a learning repo.
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+  settings:
+    govet:
+      # Make pointer-nil and WaitGroup misuse checks explicit for this Go learning repo.
+      enable:
+        - nilness
+        - waitgroup

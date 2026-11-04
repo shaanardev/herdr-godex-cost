@@ -1,0 +1,17 @@
+# Go build output
+/bin/
+/dist/
+*.test
+coverage.out
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.kubeconfig
+kubeconfig
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/*

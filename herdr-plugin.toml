@@ -1,0 +1,19 @@
+id = "sarora.herdr-codex-cost"
+name = "Herdr Codex Cost"
+version = "0.1.0"
+min_herdr_version = "0.9.5"
+description = "Estimated Codex session cost in the Herdr sidebar"
+platforms = ["linux", "macos"]
+
+[[build]]
+command = ["go", "build", "-o", "bin/herdr-codex-usage-watchdog", "./cmd/herdr-codex-usage-watchdog"]
+
+[[actions]]
+id = "refresh"
+title = "Refresh Codex cost"
+contexts = ["pane"]
+command = ["./bin/herdr-codex-usage-watchdog", "refresh"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["./bin/herdr-codex-usage-watchdog", "event"]
