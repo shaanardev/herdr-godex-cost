@@ -1,4 +1,4 @@
-package refresh
+package driver
 
 import (
 	"context"
@@ -23,8 +23,8 @@ import (
 // Bound a whole lookup, independently of the timestamp window used for matching.
 const sessionResolutionTimeout = time.Minute
 
-// Runner holds the dependencies for a refresh. Each pass rebuilds its index
-// so newly spawned descendants and newly created rollouts are discovered.
+// Runner coordinates session resolution, usage estimates, pane metadata, and
+// polling. Each pass rebuilds its index to discover new sessions and subagents.
 type Runner struct {
 	HerdrClient *herder.Client
 	CodexHome   string

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sarora/herdr-godex-cost/internal/refresh"
+	"github.com/sarora/herdr-godex-cost/internal/driver"
 )
 
 func TestRefreshAction(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRefreshAction(t *testing.T) {
 		{"default refresh", nil, `{"pane_id":"default"}`, "codex", "root", "", "default", "cost=$6.00", nil},
 		{"unchanged cost", []string{"refresh", "--pane", "same"}, "", "codex", "root", "$6.00", "same", "", nil},
 		{"non-Codex pane", []string{"refresh", "--pane", "other"}, "", "other", "", "", "other", "", nil},
-		{"unresolved session", []string{"refresh", "--pane", "unknown"}, "", "codex", "missing", "", "unknown", "cost=session?", refresh.ErrSessionNotFound},
+		{"unresolved session", []string{"refresh", "--pane", "unknown"}, "", "codex", "missing", "", "unknown", "cost=session?", driver.ErrSessionNotFound},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			directory := t.TempDir()

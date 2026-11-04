@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/sarora/herdr-godex-cost/internal/driver"
 	"github.com/sarora/herdr-godex-cost/internal/herder"
-	"github.com/sarora/herdr-godex-cost/internal/refresh"
 	"github.com/urfave/cli/v3"
 )
 
@@ -99,10 +99,10 @@ func prepareCommand(ctx context.Context, command *cli.Command) (context.Context,
 	return ctx, nil
 }
 
-func newRunner(command *cli.Command) *refresh.Runner {
+func newRunner(command *cli.Command) *driver.Runner {
 	binary := os.Getenv("HERDR_BIN_PATH")
 	if binary == "" {
 		binary = "herdr"
 	}
-	return refresh.NewRunner(herder.NewClient(binary), command.String("codex-home"), command.String("state-dir"), command.Duration("interval"))
+	return driver.NewRunner(herder.NewClient(binary), command.String("codex-home"), command.String("state-dir"), command.Duration("interval"))
 }

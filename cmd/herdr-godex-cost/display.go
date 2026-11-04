@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/sarora/herdr-godex-cost/internal/refresh"
+	"github.com/sarora/herdr-godex-cost/internal/driver"
 	"github.com/urfave/cli/v3"
 )
 
 func displayAction(ctx context.Context, command *cli.Command) error {
 	mode := command.String("mode")
-	if err := refresh.SetDisplayMode(command.String("state-dir"), mode); err != nil {
+	if err := driver.SetDisplayMode(command.String("state-dir"), mode); err != nil {
 		return err
 	}
 	runner := newRunner(command)
@@ -29,7 +29,7 @@ func displayAction(ctx context.Context, command *cli.Command) error {
 			return err
 		}
 		if err := runner.Refresh(ctx, pane.PaneID); err != nil {
-			if errors.Is(err, refresh.ErrSessionNotFound) || errors.Is(err, refresh.ErrAmbiguousSession) {
+			if errors.Is(err, driver.ErrSessionNotFound) || errors.Is(err, driver.ErrAmbiguousSession) {
 				slog.Warn("display mode saved; pane session unresolved", "mode", mode, "pane", pane.PaneID, "error", err)
 				continue
 			}
