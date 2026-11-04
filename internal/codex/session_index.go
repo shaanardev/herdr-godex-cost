@@ -3,7 +3,6 @@ package codex
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -195,39 +194,7 @@ func (index *SessionIndex) populate(ctx context.Context, databases []*sql.DB) er
 	if err != nil {
 		return fmt.Errorf("find rollout metadata: %w", err)
 	}
-	for _, path := range candidates {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		safe, err := ResolveRolloutPath(path, index.home)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) {
-				continue
-			}
-			return err
-		}
-		metadata, err := ReadSessionMetadata(ctx, path)
-		if err != nil {
-			if errors.Is(err, os.ErrNotExist) {
-				continue
-			}
-			var syntax *json.SyntaxError
-			var fieldType *json.UnmarshalTypeError
-			if !errors.As(err, &syntax) && !errors.As(err, &fieldType) {
-				return err
-			}
-			index.addDiagnostic(err)
-			continue
-		}
-		if metadata == nil || !ValidSessionID(metadata.ID) {
-			continue
-		}
-		index.addRollout(metadata.ID, safe, metadata)
-		if validSessionID.MatchString(metadata.ParentThreadID) {
-			index.children.addEdge(metadata.ParentThreadID, metadata.ID)
-		}
-	}
-	return nil
+	return index.readMetadataPipeline(ctx, candidates)
 }
 
 func (index *SessionIndex) addRollout(id, path string, metadata *SessionMetadata) {
