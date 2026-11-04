@@ -1,19 +1,22 @@
 package refresh
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/sarora/herdr-godex-cost/internal/codex"
 )
 
 const (
-	maxResolvedSessions = 512
-	sessionIDHexDigits  = "0123456789abcdefABCDEF"
+	processStartMatchWindow = time.Minute
+	maxResolvedSessions     = 512
+	sessionIDHexDigits      = "0123456789abcdefABCDEF"
 )
 
 var (
@@ -39,6 +42,7 @@ const (
 	ResolutionFromReportedID   ResolutionSource = "reported_session_id"
 	ResolutionFromPaneText     ResolutionSource = "pane_text"
 	ResolutionFromTerminalInfo ResolutionSource = "terminal_info"
+	ResolutionFromProcessStart ResolutionSource = "process_start"
 )
 
 // Identifies one rollout in a pane's session tree.
@@ -68,14 +72,17 @@ func NewSessionResolver(index *codex.SessionIndex, files *codex.RolloutFiles) (*
 // Tries the caller's session association first, then IDs visible in
 // the pane, and finally terminal-title plus working-directory evidence. Every
 // candidate must resolve to a rollout whose session_meta ID agrees.
-func (resolver *SessionResolver) Resolve(input PaneSessionInput) (*SessionResolution, error) {
+func (resolver *SessionResolver) Resolve(ctx context.Context, input PaneSessionInput) (*SessionResolution, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if id := strings.TrimSpace(input.KnownSessionID); codex.ValidSessionID(id) {
-		root, err := resolver.verifiedRollout(id)
+		root, err := resolver.verifiedRollout(ctx, id)
 		if err != nil && !errors.Is(err, ErrSessionNotFound) {
 			return nil, fmt.Errorf("verify reported Codex session %q: %w", id, err)
 		}
 		if err == nil {
-			return resolver.resolveTree(root, ResolutionFromReportedID)
+			return resolver.resolveTree(ctx, root, ResolutionFromReportedID)
 		}
 	}
 
@@ -83,20 +90,20 @@ func (resolver *SessionResolver) Resolve(input PaneSessionInput) (*SessionResolu
 		return nil, ErrSessionNotFound
 	}
 	candidates := extractCandidates(input.TerminalText)
-	visibleMatches, err := resolver.matchesFromCandidates(candidates, input.CWD)
+	visibleMatches, err := resolver.matchesFromCandidates(ctx, candidates, input.CWD)
 	if err != nil {
 		return nil, fmt.Errorf("resolve Codex session from pane text: %w", err)
 	}
 	if len(visibleMatches) == 1 {
-		return resolver.resolveTree(visibleMatches[0], ResolutionFromPaneText)
+		return resolver.resolveTree(ctx, visibleMatches[0], ResolutionFromPaneText)
 	}
 
-	terminalMatches, err := resolver.matchesFromTerminalInfo(input.TerminalTitle, input.CWD)
+	terminalMatches, err := resolver.matchesFromTerminalInfo(ctx, input.TerminalTitle, input.CWD)
 	if err != nil {
 		return nil, fmt.Errorf("resolve Codex session from terminal info: %w", err)
 	}
 	if len(terminalMatches) == 1 {
-		return resolver.resolveTree(terminalMatches[0], ResolutionFromTerminalInfo)
+		return resolver.resolveTree(ctx, terminalMatches[0], ResolutionFromTerminalInfo)
 	}
 	if len(visibleMatches) > 1 || len(terminalMatches) > 1 {
 		return nil, fmt.Errorf("resolve pane session: %w", ErrAmbiguousSession)
@@ -104,13 +111,16 @@ func (resolver *SessionResolver) Resolve(input PaneSessionInput) (*SessionResolu
 	return nil, fmt.Errorf("resolve pane session: %w", ErrSessionNotFound)
 }
 
-func (resolver *SessionResolver) resolveTree(root *codex.Rollout, source ResolutionSource) (*SessionResolution, error) {
+func (resolver *SessionResolver) resolveTree(ctx context.Context, root *codex.Rollout, source ResolutionSource) (*SessionResolution, error) {
 	rootID := root.Metadata.ID
 	resolution := &SessionResolution{RootThreadID: rootID, Source: source}
 	queue := []string{rootID}
 	visited := make(map[string]struct{})
 
 	for len(queue) > 0 {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		threadID := queue[0]
 		queue = queue[1:]
 		if _, exists := visited[threadID]; exists {
@@ -127,9 +137,12 @@ func (resolver *SessionResolver) resolveTree(root *codex.Rollout, source Resolut
 		rollout := root
 		var err error
 		if threadID != rootID {
-			rollout, err = resolver.verifiedRollout(threadID)
+			rollout, err = resolver.verifiedRollout(ctx, threadID)
 		}
 		if err != nil {
+			if ctx.Err() != nil {
+				return nil, ctx.Err()
+			}
 			resolution.addDiagnostic(fmt.Errorf("verify child rollout %q: %w", threadID, err))
 		} else {
 			resolution.addSession(threadID, rollout.Path)
@@ -139,22 +152,22 @@ func (resolver *SessionResolver) resolveTree(root *codex.Rollout, source Resolut
 	return resolution, nil
 }
 
-func (resolver *SessionResolver) matchesFromTerminalInfo(title, cwd string) ([]*codex.Rollout, error) {
+func (resolver *SessionResolver) matchesFromTerminalInfo(ctx context.Context, title, cwd string) ([]*codex.Rollout, error) {
 	var candidates []sessionIDCandidate
 	for _, id := range resolver.index.SessionIDsByTitle(title, cwd) {
 		candidates = append(candidates, sessionIDCandidate{ID: id})
 	}
-	return resolver.matchesFromCandidates(candidates, cwd)
+	return resolver.matchesFromCandidates(ctx, candidates, cwd)
 }
 
-func (resolver *SessionResolver) matchesFromCandidates(candidates []sessionIDCandidate, cwd string) ([]*codex.Rollout, error) {
+func (resolver *SessionResolver) matchesFromCandidates(ctx context.Context, candidates []sessionIDCandidate, cwd string) ([]*codex.Rollout, error) {
 	var prefixes []string
 	for _, candidate := range candidates {
 		if candidate.Prefix != "" {
 			prefixes = append(prefixes, candidate.Prefix)
 		}
 	}
-	prefixMatches, err := resolver.files.FindByPrefixes(prefixes, cwd)
+	prefixMatches, err := resolver.files.FindByPrefixes(ctx, prefixes, cwd)
 	if err != nil {
 		if errors.Is(err, codex.ErrAmbiguousRollout) {
 			return nil, ErrAmbiguousSession
@@ -163,9 +176,12 @@ func (resolver *SessionResolver) matchesFromCandidates(candidates []sessionIDCan
 	}
 	matches := make(map[string]*codex.Rollout)
 	for _, candidate := range candidates {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		var rollout *codex.Rollout
 		if candidate.ID != "" {
-			rollout, err = resolver.verifiedRollout(candidate.ID)
+			rollout, err = resolver.verifiedRollout(ctx, candidate.ID)
 			if errors.Is(err, ErrSessionNotFound) {
 				continue
 			}
@@ -255,13 +271,16 @@ func extractCandidates(text string) []sessionIDCandidate {
 	return candidates
 }
 
-func (resolver *SessionResolver) verifiedRollout(id string) (*codex.Rollout, error) {
+func (resolver *SessionResolver) verifiedRollout(ctx context.Context, id string) (*codex.Rollout, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	path, err := resolver.index.RolloutPath(id)
 	var rollout *codex.Rollout
 	if errors.Is(err, codex.ErrRolloutNotFound) {
-		rollout, err = resolver.files.FindByID(id)
+		rollout, err = resolver.files.FindByID(ctx, id)
 	} else if err == nil {
-		rollout, err = resolver.files.Read(path)
+		rollout, err = resolver.files.Read(ctx, path)
 		if err == nil && rollout.Metadata.ID != id {
 			err = codex.ErrRolloutNotFound
 		}
@@ -276,4 +295,48 @@ func (resolver *SessionResolver) verifiedRollout(id string) (*codex.Rollout, err
 		return nil, err
 	}
 	return rollout, nil
+}
+
+// ResolveByProcessStart is a fallback for panes without a usable session reference.
+// Require one top-level session in the same directory within one minute.
+func (resolver *SessionResolver) ResolveByProcessStart(ctx context.Context, cwd string, started time.Time) (*SessionResolution, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	var match *codex.Rollout
+	for _, id := range resolver.index.SessionIDsByCWD(cwd) {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		rollout, err := resolver.verifiedRollout(ctx, id)
+		if errors.Is(err, ErrSessionNotFound) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+		meta := rollout.Metadata
+		if meta.ParentThreadID != "" || meta.ThreadSource == "subagent" || meta.ThreadSource == "guardian_review" {
+			continue
+		}
+		stamp, err := time.Parse(time.RFC3339Nano, meta.Timestamp)
+		if err != nil {
+			continue
+		}
+		delta := stamp.Sub(started)
+		if delta < -processStartMatchWindow || delta > processStartMatchWindow {
+			continue
+		}
+		if match != nil {
+			return nil, ErrAmbiguousSession
+		}
+		match = rollout
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if match == nil {
+		return nil, ErrSessionNotFound
+	}
+	return resolver.resolveTree(ctx, match, ResolutionFromProcessStart)
 }

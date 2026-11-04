@@ -20,6 +20,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+// Bound a whole lookup, independently of the timestamp window used for matching.
+const sessionResolutionTimeout = time.Minute
+
 // Runner holds the dependencies for a refresh. Each pass rebuilds its index
 // so newly spawned descendants and newly created rollouts are discovered.
 type Runner struct {
@@ -84,29 +87,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	if err != nil {
 		return err
 	}
-	index, err := runner.sessionIndex(ctx)
-	if err != nil {
-		return err
-	}
-	runner.logDiagnostics(paneID, "index rollout", index.Diagnostics)
-	resolver, err := NewSessionResolver(index, codex.NewRolloutFiles(runner.CodexHome))
-	if err != nil {
-		return err
-	}
-	input := PaneSessionInput{PaneID: paneID, CWD: pane.CWD, TerminalTitle: pane.Title}
-	if pane.AgentSession != nil && pane.AgentSession.Agent == "codex" && pane.AgentSession.Kind == "id" {
-		input.KnownSessionID = pane.AgentSession.Value
-	}
-	// Read visible text only when the reported association cannot be verified.
-	resolution, err := resolver.Resolve(input)
-	if errors.Is(err, ErrSessionNotFound) || errors.Is(err, ErrAmbiguousSession) {
-		text, readErr := runner.HerdrClient.ReadPane(ctx, paneID)
-		if readErr != nil {
-			return readErr
-		}
-		input.TerminalText = string(text)
-		resolution, err = resolver.Resolve(input)
-	}
+	resolution, err := runner.resolvePaneSession(ctx, paneID, pane)
 	if err != nil {
 		if errors.Is(err, ErrSessionNotFound) || errors.Is(err, ErrAmbiguousSession) {
 			if pane.Tokens["cost"] == "" || pane.Tokens["cost"] == "…" {
@@ -240,4 +221,42 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 		}
 		timer.Reset(runner.Interval)
 	}
+}
+
+func (runner Runner) resolvePaneSession(ctx context.Context, paneID string, pane *herder.PaneInfo) (*SessionResolution, error) {
+	ctx, cancel := context.WithTimeout(ctx, sessionResolutionTimeout)
+	defer cancel()
+	index, err := runner.sessionIndex(ctx)
+	if err != nil {
+		return nil, err
+	}
+	runner.logDiagnostics(paneID, "index rollout", index.Diagnostics)
+	resolver, err := NewSessionResolver(index, codex.NewRolloutFiles(runner.CodexHome))
+	if err != nil {
+		return nil, err
+	}
+	input := PaneSessionInput{PaneID: paneID, CWD: pane.CWD, TerminalTitle: pane.Title}
+	if pane.AgentSession != nil && pane.AgentSession.Agent == "codex" && pane.AgentSession.Kind == "id" {
+		input.KnownSessionID = pane.AgentSession.Value
+	}
+	// Read visible text only when the reported association cannot be verified.
+	resolution, err := resolver.Resolve(ctx, input)
+	if errors.Is(err, ErrSessionNotFound) || errors.Is(err, ErrAmbiguousSession) {
+		text, readErr := runner.HerdrClient.ReadPane(ctx, paneID)
+		if readErr != nil {
+			return nil, readErr
+		}
+		input.TerminalText = string(text)
+		resolution, err = resolver.Resolve(ctx, input)
+	}
+	if errors.Is(err, ErrSessionNotFound) {
+		started, processErr := runner.HerdrClient.CodexProcessStart(ctx, paneID)
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if processErr == nil {
+			resolution, err = resolver.ResolveByProcessStart(ctx, pane.CWD, started)
+		}
+	}
+	return resolution, err
 }

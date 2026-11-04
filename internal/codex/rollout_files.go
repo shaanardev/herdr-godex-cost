@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -27,7 +28,10 @@ type Rollout struct {
 
 // Read verifies containment, file type and session metadata before returning a rollout.
 // Filesystem and decoding errors retain their original causes.
-func (files RolloutFiles) Read(path string) (*Rollout, error) {
+func (files RolloutFiles) Read(ctx context.Context, path string) (*Rollout, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	safe, err := ResolveRolloutPath(path, files.Home)
 	if err != nil {
 		return nil, err
@@ -39,7 +43,7 @@ func (files RolloutFiles) Read(path string) (*Rollout, error) {
 	if !info.Mode().IsRegular() {
 		return nil, ErrRolloutNotFound
 	}
-	metadata, err := ReadSessionMetadata(safe)
+	metadata, err := ReadSessionMetadata(ctx, safe)
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +54,20 @@ func (files RolloutFiles) Read(path string) (*Rollout, error) {
 }
 
 // FindByID matches the filename and metadata ID, rejecting distinct matching files.
-func (files RolloutFiles) FindByID(id string) (*Rollout, error) {
+func (files RolloutFiles) FindByID(ctx context.Context, id string) (*Rollout, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	if !ValidSessionID(id) {
 		return nil, fmt.Errorf("invalid Codex session ID %q", id)
 	}
 	suffix := "-" + id + ".jsonl"
 	var found *Rollout
-	err := walkRolloutFiles(files.Home, func(path string) error {
+	err := walkRolloutFiles(ctx, files.Home, func(path string) error {
 		if !strings.HasSuffix(filepath.Base(path), suffix) {
 			return nil
 		}
-		rollout, err := files.Read(path)
+		rollout, err := files.Read(ctx, path)
 		if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) || errors.Is(err, ErrRolloutNotFound) {
 			return nil
 		}
@@ -87,8 +94,8 @@ func (files RolloutFiles) FindByID(id string) (*Rollout, error) {
 
 // FindByPrefix returns one unambiguous metadata match. Prefixes must contain
 // at least eight hexadecimal characters to avoid matching ordinary pane text.
-func (files RolloutFiles) FindByPrefix(prefix string) (*Rollout, error) {
-	matches, err := files.FindByPrefixes([]string{prefix}, "")
+func (files RolloutFiles) FindByPrefix(ctx context.Context, prefix string) (*Rollout, error) {
+	matches, err := files.FindByPrefixes(ctx, []string{prefix}, "")
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +109,10 @@ func (files RolloutFiles) FindByPrefix(prefix string) (*Rollout, error) {
 // FindByPrefixes resolves all prefixes during one directory scan. Unmatched
 // prefixes are omitted; an ambiguous prefix fails the lookup. A nonempty cwd
 // filters candidates before ambiguity is determined.
-func (files RolloutFiles) FindByPrefixes(prefixes []string, cwd string) (map[string]*Rollout, error) {
+func (files RolloutFiles) FindByPrefixes(ctx context.Context, prefixes []string, cwd string) (map[string]*Rollout, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	matches := make(map[string]*Rollout)
 	if len(prefixes) == 0 {
 		return matches, nil
@@ -116,8 +126,8 @@ func (files RolloutFiles) FindByPrefixes(prefixes []string, cwd string) (map[str
 	if resolved, err := filepath.EvalSymlinks(expectedCWD); err == nil {
 		expectedCWD = resolved
 	}
-	err := walkRolloutFiles(files.Home, func(path string) error {
-		rollout, err := files.Read(path)
+	err := walkRolloutFiles(ctx, files.Home, func(path string) error {
+		rollout, err := files.Read(ctx, path)
 		if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) || errors.Is(err, ErrRolloutNotFound) {
 			return nil
 		}
@@ -154,7 +164,10 @@ func (files RolloutFiles) FindByPrefixes(prefixes []string, cwd string) (map[str
 }
 
 // Visits rollout JSONL files under both Codex session roots.
-func walkRolloutFiles(home string, visit func(path string) error) error {
+func walkRolloutFiles(ctx context.Context, home string, visit func(path string) error) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	for _, baseName := range []string{"sessions", "archived_sessions"} {
 		base := filepath.Join(home, baseName)
 		info, err := os.Stat(base)
@@ -166,6 +179,9 @@ func walkRolloutFiles(home string, visit func(path string) error) error {
 		}
 
 		err = filepath.WalkDir(base, func(path string, entry fs.DirEntry, walkErr error) error {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 			if errors.Is(walkErr, os.ErrNotExist) {
 				return nil
 			}

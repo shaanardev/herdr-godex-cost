@@ -76,14 +76,14 @@ func TestResolutionAndPathErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolution, err := resolver.Resolve(PaneSessionInput{KnownSessionID: "root"})
+	resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{KnownSessionID: "root"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(resolution.Sessions) != 2 || resolution.Incomplete() {
 		t.Fatalf("unexpected tree: %+v", resolution)
 	}
-	_, err = resolver.Resolve(PaneSessionInput{CWD: "/work", TerminalTitle: "Codex"})
+	_, err = resolver.Resolve(context.Background(), PaneSessionInput{CWD: "/work", TerminalTitle: "Codex"})
 	if !errors.Is(err, ErrSessionNotFound) {
 		t.Fatalf("title without an exact indexed name must not match: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestMissingChildIsPartial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolution, err := resolver.Resolve(PaneSessionInput{KnownSessionID: "root"})
+	resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{KnownSessionID: "root"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,5 +205,24 @@ esac
 	}
 	if string(before) != string(after) {
 		t.Fatal("incomplete estimate overwrote complete cache")
+	}
+}
+
+func TestSessionResolutionHonorsCallerDeadline(t *testing.T) {
+	executable := filepath.Join(t.TempDir(), "herdr")
+	// No local session matches; the resolver must stop this blocked pane read.
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nexec /bin/sleep 30\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	runner := NewRunner(herder.NewClient(executable), t.TempDir(), t.TempDir(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	started := time.Now()
+	resolution, err := runner.resolvePaneSession(ctx, "pane", &herder.PaneInfo{Agent: "codex", CWD: "/work"})
+	if !errors.Is(err, context.DeadlineExceeded) || resolution != nil {
+		t.Fatalf("resolution=%+v error=%v", resolution, err)
+	}
+	if time.Since(started) > 2*time.Second {
+		t.Fatal("resolution did not respect the shorter caller deadline")
 	}
 }

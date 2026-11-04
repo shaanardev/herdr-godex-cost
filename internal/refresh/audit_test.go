@@ -40,7 +40,7 @@ func TestVisibleSessionResolutionRequiresCWDAndDetectsAdjacentIDs(t *testing.T) 
 		{"ID: " + first, "/work", nil},
 		{"ID: 12345678-1234-1234-1234-…", "/work", nil},
 	} {
-		resolution, err := resolver.Resolve(PaneSessionInput{TerminalText: test.text, CWD: test.cwd})
+		resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{TerminalText: test.text, CWD: test.cwd})
 		if !errors.Is(err, test.want) {
 			t.Fatalf("text=%q cwd=%q: %v; want %v", test.text, test.cwd, err, test.want)
 		}
@@ -66,12 +66,12 @@ func TestTerminalTitleMatchesExactIndexedName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolution, err := resolver.Resolve(PaneSessionInput{CWD: "/work", TerminalTitle: "Audit queue | work"})
+	resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{CWD: "/work", TerminalTitle: "Audit queue | work"})
 	if err != nil || resolution.RootThreadID != "root" {
 		t.Fatalf("title fallback: %+v %v", resolution, err)
 	}
 	for _, title := range []string{"Codex", "Unknown | work", "Audit queue | different"} {
-		if _, err := resolver.Resolve(PaneSessionInput{CWD: "/work", TerminalTitle: title}); !errors.Is(err, ErrSessionNotFound) {
+		if _, err := resolver.Resolve(context.Background(), PaneSessionInput{CWD: "/work", TerminalTitle: title}); !errors.Is(err, ErrSessionNotFound) {
 			t.Fatalf("guessed from title %q: %v", title, err)
 		}
 	}
@@ -167,7 +167,7 @@ func TestPrefixAmbiguityIsScopedToPaneCWD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result, err := resolver.Resolve(PaneSessionInput{CWD: "/work", TerminalText: "12345678-1234-1234-1234-…"})
+	result, err := resolver.Resolve(context.Background(), PaneSessionInput{CWD: "/work", TerminalText: "12345678-1234-1234-1234-…"})
 	if err != nil || result.RootThreadID != first {
 		t.Fatalf("unrelated cwd made a valid prefix ambiguous: %+v %v", result, err)
 	}

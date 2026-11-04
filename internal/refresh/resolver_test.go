@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sarora/herdr-godex-cost/internal/codex"
 )
@@ -99,7 +100,7 @@ func TestTreeDiagnostics(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			resolution, err := resolver.Resolve(PaneSessionInput{KnownSessionID: "root"})
+			resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{KnownSessionID: "root"})
 			if target == "root" {
 				if err == nil || resolution != nil {
 					t.Fatalf("root failure returned partial success: %+v, %v", resolution, err)
@@ -174,7 +175,7 @@ func TestTreeTraversalLimit(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			resolution, err := resolver.Resolve(PaneSessionInput{KnownSessionID: "root"})
+			resolution, err := resolver.Resolve(context.Background(), PaneSessionInput{KnownSessionID: "root"})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -226,7 +227,7 @@ func TestResolveTreeReusesVerifiedRoot(t *testing.T) {
 		t.Fatal(err)
 	}
 	files := codex.NewRolloutFiles(home)
-	root, err := files.FindByID("root")
+	root, err := files.FindByID(context.Background(), "root")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,11 +241,11 @@ func TestResolveTreeReusesVerifiedRoot(t *testing.T) {
 	if err := os.WriteFile(root.Path, []byte("broken\n"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	resolution, err := resolver.resolveTree(root, ResolutionFromReportedID)
+	resolution, err := resolver.resolveTree(context.Background(), root, ResolutionFromReportedID)
 	if err != nil || resolution == nil || resolution.Incomplete() || len(resolution.Sessions) != 1 {
 		t.Fatalf("verified root was reread: %+v %v", resolution, err)
 	}
-	_, err = resolver.Resolve(PaneSessionInput{KnownSessionID: "root"})
+	_, err = resolver.Resolve(context.Background(), PaneSessionInput{KnownSessionID: "root"})
 	var syntax *json.SyntaxError
 	if !errors.As(err, &syntax) {
 		t.Fatalf("later resolution reused stale metadata: %v", err)
@@ -266,7 +267,7 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 		t.Fatal(err)
 	}
 	candidates := []sessionIDCandidate{{Prefix: "12345678"}, {Prefix: "abcdefab"}, {ID: first}}
-	matches, err := resolver.matchesFromCandidates(candidates, "/work")
+	matches, err := resolver.matchesFromCandidates(context.Background(), candidates, "/work")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,7 +286,7 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(directory, "rollout-"+first+".jsonl"), contents, 0600); err != nil {
 		t.Fatal(err)
 	}
-	_, err = resolver.matchesFromCandidates(candidates, "/work")
+	_, err = resolver.matchesFromCandidates(context.Background(), candidates, "/work")
 	if !errors.Is(err, ErrAmbiguousSession) {
 		t.Fatalf("ambiguous prefix became a match: %v", err)
 	}
@@ -302,8 +303,82 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = resolver.matchesFromCandidates(candidates[:2], "/work")
+	_, err = resolver.matchesFromCandidates(context.Background(), candidates[:2], "/work")
 	if !errors.Is(err, ErrAmbiguousSession) {
 		t.Fatalf("prefix bypassed indexed ambiguity: %v", err)
+	}
+}
+
+func TestResolveByProcessStart(t *testing.T) {
+	for _, scenario := range []string{"unique root", "two roots", "wrong directory", "outside window", "at boundary", "just outside", "cancelled"} {
+		t.Run(scenario, func(t *testing.T) {
+			home := t.TempDir()
+			started := time.Date(2026, 11, 4, 22, 27, 37, 0, time.UTC)
+			for _, session := range []struct{ id, parent string }{{"root", ""}, {"child", "root"}, {"other", ""}} {
+				writeRollout(t, home, session.id, session.parent)
+				path := filepath.Join(home, "sessions", "rollout-"+session.id+".jsonl")
+				raw, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				stamp := started.Add(5 * time.Second)
+				if session.id == "other" || scenario == "outside window" {
+					stamp = started.Add(-time.Hour)
+				}
+				if session.id == "root" {
+					switch scenario {
+					case "at boundary":
+						stamp = started.Add(time.Minute)
+					case "just outside":
+						stamp = started.Add(time.Minute + time.Nanosecond)
+					case "outside window":
+						stamp = started.Add(-time.Minute - time.Nanosecond)
+					}
+				}
+				if session.id == "other" && scenario == "two roots" {
+					stamp = started.Add(10 * time.Second)
+				}
+				contents := strings.Replace(string(raw), `"id":"`+session.id+`"`, `"timestamp":"`+stamp.Format(time.RFC3339Nano)+`","id":"`+session.id+`"`, 1)
+				if err := os.WriteFile(path, []byte(contents), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			index, err := codex.NewSessionIndex(context.Background(), home)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resolver, err := NewSessionResolver(index, codex.NewRolloutFiles(home))
+			if err != nil {
+				t.Fatal(err)
+			}
+			cwd := "/work"
+			if scenario == "wrong directory" {
+				cwd = "/elsewhere"
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if scenario == "cancelled" {
+				cancel()
+			}
+			got, err := resolver.ResolveByProcessStart(ctx, cwd, started)
+			switch scenario {
+			case "unique root", "at boundary":
+				if err != nil || got.RootThreadID != "root" || got.Source != ResolutionFromProcessStart || len(got.Sessions) != 2 {
+					t.Fatalf("resolution=%+v error=%v", got, err)
+				}
+			case "cancelled":
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("cancellation lost: %v", err)
+				}
+			case "two roots":
+				if !errors.Is(err, ErrAmbiguousSession) {
+					t.Fatalf("ambiguous roots: %v", err)
+				}
+			default:
+				if !errors.Is(err, ErrSessionNotFound) {
+					t.Fatalf("unexpected match: %+v %v", got, err)
+				}
+			}
+		})
 	}
 }

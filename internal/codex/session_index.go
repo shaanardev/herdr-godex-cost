@@ -165,7 +165,7 @@ func (index *SessionIndex) populate(ctx context.Context, databases []*sql.DB) er
 			}
 			return err
 		}
-		metadata, err := ReadSessionMetadata(path)
+		metadata, err := ReadSessionMetadata(ctx, path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
@@ -220,7 +220,7 @@ func (index *SessionIndex) metadataCandidates(ctx context.Context) ([]string, er
 	}
 
 	var candidates []string
-	err := walkRolloutFiles(index.home, func(path string) error {
+	err := walkRolloutFiles(ctx, index.home, func(path string) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
@@ -324,8 +324,11 @@ func (index *SessionIndex) readThreadRollouts(ctx context.Context, db *sql.DB, c
 		if !info.Mode().IsRegular() {
 			continue
 		}
-		metadata, metadataErr := ReadSessionMetadata(path)
+		metadata, metadataErr := ReadSessionMetadata(ctx, path)
 		if metadataErr != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
 			index.addDiagnostic(metadataErr)
 		}
 		if metadataErr != nil || metadata == nil || metadata.ID != threadID.String {

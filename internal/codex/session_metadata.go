@@ -2,6 +2,7 @@ package codex
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 // Holds session metadata fields used to associate panes and
 // build session trees.
 type SessionMetadata struct {
+	Timestamp      string `json:"timestamp"`
 	ID             string `json:"id"`
 	ParentThreadID string `json:"parent_thread_id"`
 	ForkedFromID   string `json:"forked_from_id"`
@@ -26,7 +28,10 @@ type rolloutEvent struct {
 
 // Reads the first session metadata event from a Codex JSONL
 // rollout. It returns (nil, nil) when the file has no session_meta event.
-func ReadSessionMetadata(path string) (*SessionMetadata, error) {
+func ReadSessionMetadata(ctx context.Context, path string) (*SessionMetadata, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("open Codex rollout %q: %w", path, err)
@@ -35,6 +40,9 @@ func ReadSessionMetadata(path string) (*SessionMetadata, error) {
 
 	reader := bufio.NewReader(file)
 	for {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		line, readErr := reader.ReadBytes('\n')
 		if len(line) > 0 {
 			var event rolloutEvent
