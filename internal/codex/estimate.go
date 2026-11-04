@@ -1,8 +1,17 @@
 package codex
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
-// Estimate retains known costs even when some records cannot be priced.
+const (
+	autoReviewInputRateUSD     = 2.5
+	autoReviewCacheReadRateUSD = 0.25
+	autoReviewOutputRateUSD    = 15.0
+)
+
+// Retains known costs even when some records cannot be priced.
 type Estimate struct {
 	KnownUSD     float64
 	EstimatedUSD float64
@@ -30,9 +39,16 @@ func (estimate Estimate) String() string {
 	return fmt.Sprintf("%s$%.2f", prefix, estimate.KnownUSD)
 }
 
-// Estimate prices each event using its active model and request counters.
+// Prices each event using its active model and request counters.
 func (usage *RolloutUsage) Estimate() Estimate {
-	result := Estimate{HasUsage: usage.Totals.HasCounters(), Incomplete: !usage.Complete}
+	result := NewEstimate(!usage.Complete)
+	result.HasUsage = usage.Totals.HasCounters()
+	if usage.UsageBeforeModel && usage.ForkBaselineEligible {
+		if _, err := RatesForModel(usage.FirstModel); err != nil && normalizeModel(usage.FirstModel) != "codex-auto-review" {
+			slog.Warn("resolve rates for first Codex model", "model", usage.FirstModel, "error", err)
+			result.Incomplete = true
+		}
+	}
 	var previous TokenUsage
 	for _, event := range usage.TokenCounts {
 		prior := previous
@@ -54,9 +70,10 @@ func (usage *RolloutUsage) Estimate() Estimate {
 		rates, err := RatesForModel(model)
 		estimated := model == "codex-auto-review"
 		if estimated {
-			rates = &Rates{InputUSD: 2.5, CacheReadUSD: .25, OutputUSD: 15}
+			rates = NewRates(autoReviewInputRateUSD, autoReviewCacheReadRateUSD, 0, autoReviewOutputRateUSD)
 		}
 		if err != nil && !estimated {
+			slog.Warn("resolve rates for Codex model", "model", model, "error", err)
 			result.Incomplete = true
 			continue
 		}
@@ -66,6 +83,7 @@ func (usage *RolloutUsage) Estimate() Estimate {
 		}
 		cost, err := billable.CostUSD(effectiveRates)
 		if err != nil {
+			slog.Warn("calculate Codex token cost", "model", model, "error", err)
 			result.Incomplete = true
 			continue
 		}
@@ -75,5 +93,5 @@ func (usage *RolloutUsage) Estimate() Estimate {
 			result.KnownUSD += cost
 		}
 	}
-	return result
+	return *result
 }

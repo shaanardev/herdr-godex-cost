@@ -28,7 +28,7 @@ type Runner struct {
 	StateDir    string
 	Interval    time.Duration
 	// A watch worker remembers the last diagnostic set until resolution recovers.
-	lastResolutionDiagnostics map[string]string
+	lastDiagnostics map[string]string
 }
 
 func NewRunner(herdrClient *herder.Client, codexHome string, stateDir string, interval time.Duration) *Runner {
@@ -47,28 +47,23 @@ func (runner Runner) sessionIndex(ctx context.Context) (*codex.SessionIndex, err
 		}
 		return version(left) - version(right)
 	})
-	// Prefer the newest schema. Older files can remain after Codex upgrades.
-	for _, database := range slices.Backward(databases) {
+	// Codex upgrades can leave useful threads and edges in several databases.
+	var databasesToIndex []*sql.DB
+	for _, database := range databases {
 		uri := url.URL{Scheme: "file", Path: database, RawQuery: "mode=ro"}
 		db, err := sql.Open("sqlite", uri.String())
 		if err != nil {
 			slog.Warn("open state database", "path", database, "error", err)
 			continue
 		}
-		index, indexErr := codex.NewSessionIndex(ctx, db, runner.CodexHome)
-		closeErr := db.Close()
-		if closeErr != nil {
-			slog.Warn("close state database", "error", closeErr)
-		}
-		if indexErr == nil {
-			return index, nil
-		}
-		if ctx.Err() != nil {
-			return nil, ctx.Err()
-		}
-		slog.Warn("read state database; trying fallback", "path", database, "error", indexErr)
+		defer func() {
+			if err := db.Close(); err != nil {
+				slog.Warn("close state database", "path", database, "error", err)
+			}
+		}()
+		databasesToIndex = append(databasesToIndex, db)
 	}
-	return codex.NewSessionIndex(ctx, nil, runner.CodexHome)
+	return codex.NewSessionIndex(ctx, runner.CodexHome, databasesToIndex...)
 }
 
 // Refresh updates a single pane, preserving its last value during a restart.
@@ -89,9 +84,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	if err != nil {
 		return err
 	}
-	for _, diagnostic := range index.Diagnostics {
-		slog.Warn("index rollout", "error", diagnostic)
-	}
+	runner.logDiagnostics(paneID, "index rollout", index.Diagnostics)
 	resolver, err := NewSessionResolver(index, codex.NewRolloutFiles(runner.CodexHome))
 	if err != nil {
 		return err
@@ -120,7 +113,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 		}
 		return err
 	}
-	runner.logResolutionDiagnostics(paneID, resolution.Diagnostics)
+	runner.logDiagnostics(paneID, "resolve session tree", resolution.Diagnostics)
 	fingerprint, err := resolution.Fingerprint()
 	if err != nil {
 		return err
@@ -162,7 +155,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 		}
 	}
 	display := estimate.String()
-	if display == "..." && pane.Tokens["cost"] != "" && pane.Tokens["cost"] != "..." {
+	if display == "…" && pane.Tokens["cost"] != "" && pane.Tokens["cost"] != "…" {
 		return nil
 	}
 	if pane.Tokens["cost"] == display {
@@ -173,20 +166,21 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 
 // Logs changed warnings once per watch worker. Clearing
 // the remembered set on recovery lets a later recurrence be reported again.
-func (runner Runner) logResolutionDiagnostics(paneID string, diagnostics []error) {
+func (runner Runner) logDiagnostics(paneID, stage string, diagnostics []error) {
+	key := stage + ":" + paneID
 	combined := errors.Join(diagnostics...)
 	if combined == nil {
-		delete(runner.lastResolutionDiagnostics, paneID)
+		delete(runner.lastDiagnostics, key)
 		return
 	}
-	if runner.lastResolutionDiagnostics != nil {
+	if runner.lastDiagnostics != nil {
 		message := combined.Error()
-		if runner.lastResolutionDiagnostics[paneID] == message {
+		if runner.lastDiagnostics[key] == message {
 			return
 		}
-		runner.lastResolutionDiagnostics[paneID] = message
+		runner.lastDiagnostics[key] = message
 	}
-	slog.Warn("resolve session tree", "pane", paneID, "error", combined)
+	slog.Warn(stage, "pane", paneID, "error", combined)
 }
 
 func readUsage(path string) (*codex.RolloutUsage, error) {
@@ -205,10 +199,11 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 		return errors.New("refresh interval must be positive")
 	}
 
-	runner.lastResolutionDiagnostics = make(map[string]string)
+	runner.lastDiagnostics = make(map[string]string)
 	// The first pass runs immediately; subsequent waits start after the work.
 	timer := time.NewTimer(0)
 	defer timer.Stop()
+	var lastError string
 	for {
 		select {
 		case <-ctx.Done():
@@ -233,7 +228,12 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 			return err
 		}
 		if err != nil {
-			slog.Warn("refresh pane", "pane", paneID, "error", err)
+			if message := err.Error(); message != lastError {
+				slog.Warn("refresh pane", "pane", paneID, "error", err)
+				lastError = message
+			}
+		} else {
+			lastError = ""
 		}
 		timer.Reset(runner.Interval)
 	}

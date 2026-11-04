@@ -51,7 +51,7 @@ func TestRolloutFilesBatchPrefixes(t *testing.T) {
 	first := writeMetadata(t, home, "sessions/rollout-first.jsonl", "12345678-1234-1234-1234-123456789abc")
 	second := writeMetadata(t, home, "archived_sessions/rollout-second.jsonl", "abcdefab-1234-1234-1234-123456789abc")
 	files := NewRolloutFiles(home)
-	matches, err := files.FindByPrefixes([]string{"12345678", "abcdefab", "12345678", "deadbeef"})
+	matches, err := files.FindByPrefixes([]string{"12345678", "abcdefab", "12345678", "deadbeef"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestRolloutFilesBatchPrefixes(t *testing.T) {
 		}
 	}
 	// An empty batch does not touch the filesystem.
-	empty, err := NewRolloutFiles("/does/not/exist").FindByPrefixes(nil)
+	empty, err := NewRolloutFiles("/does/not/exist").FindByPrefixes(nil, "")
 	if err != nil || len(empty) != 0 {
 		t.Fatalf("empty batch: %+v %v", empty, err)
 	}
@@ -82,7 +82,7 @@ func TestRolloutFilesRejectAmbiguousMatches(t *testing.T) {
 	if _, err := files.FindByID(id); !errors.Is(err, ErrAmbiguousRollout) {
 		t.Fatalf("duplicate ID: %v", err)
 	}
-	if _, err := files.FindByPrefixes([]string{"12345678", "deadbeef"}); !errors.Is(err, ErrAmbiguousRollout) {
+	if _, err := files.FindByPrefixes([]string{"12345678", "deadbeef"}, ""); !errors.Is(err, ErrAmbiguousRollout) {
 		t.Fatalf("duplicate prefix: %v", err)
 	}
 }
@@ -154,7 +154,7 @@ func TestPrefixAliasesShareVerifiedRollout(t *testing.T) {
 	home := t.TempDir()
 	const id = "12345678-1234-1234-1234-123456789abc"
 	writeMetadata(t, home, "sessions/rollout-"+id+".jsonl", id)
-	matches, err := NewRolloutFiles(home).FindByPrefixes([]string{"12345678", "12345678-1234"})
+	matches, err := NewRolloutFiles(home).FindByPrefixes([]string{"12345678", "12345678-1234"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -68,7 +68,7 @@ func TestResolutionAndPathErrors(t *testing.T) {
 	home := t.TempDir()
 	writeRollout(t, home, "root", "")
 	writeRollout(t, home, "child", "root")
-	index, err := codex.NewSessionIndex(context.Background(), nil, home)
+	index, err := codex.NewSessionIndex(context.Background(), home)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,8 +84,8 @@ func TestResolutionAndPathErrors(t *testing.T) {
 		t.Fatalf("unexpected tree: %+v", resolution)
 	}
 	_, err = resolver.Resolve(PaneSessionInput{CWD: "/work", TerminalTitle: "Codex"})
-	if !errors.Is(err, ErrAmbiguousSession) {
-		t.Fatalf("expected ambiguous CWD: %v", err)
+	if !errors.Is(err, ErrSessionNotFound) {
+		t.Fatalf("title without an exact indexed name must not match: %v", err)
 	}
 	_, err = codex.ResolveRolloutPath(filepath.Join(home, "sessions", "missing.jsonl"), home)
 	if !errors.Is(err, os.ErrNotExist) {
@@ -135,7 +135,7 @@ func TestMissingChildIsPartial(t *testing.T) {
 	home := t.TempDir()
 	writeRollout(t, home, "root", "")
 	writeRollout(t, home, "child", "root")
-	index, err := codex.NewSessionIndex(context.Background(), nil, home)
+	index, err := codex.NewSessionIndex(context.Background(), home)
 	if err != nil {
 		t.Fatal(err)
 	}

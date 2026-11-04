@@ -1,0 +1,572 @@
+{
+  "source": "https://github.com/Coolsik/herdr-codex-cost/blob/73b83d5e4744647bd16fbae95517969f8f62f086/test/codex-cost-test",
+  "fixtures": [
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-5.5\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.71,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-5.6-cyber\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 9.1125,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"cached_input_tokens\": 20000, \"cache_write_input_tokens\": 50000, \"output_tokens\": 10000}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"cached_input_tokens\": 20000, \"cache_write_input_tokens\": 50000, \"output_tokens\": 10000}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 40000}}, \"cache_write_input_tokens\": 1}}}}\n",
+      "known": 0.0,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}}}}\n",
+      "known": 0.41200000000000003,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": -1}}}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": -1}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 1}}}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 1}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 40000}}, \"cache_write_input_tokens\": 1}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 40000}}, \"cache_write_input_tokens\": 1}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": null}}}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": null}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": true}}}, \"last_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": true}}}}}}\n",
+      "known": 0.337,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 200000, \"output_tokens\": 20000, \"input_tokens_details\": {\"cached_tokens\": 40000, \"cache_write_tokens\": 100000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 60000, \"ttl_12h_tokens\": 40000}}}}}}\n",
+      "known": 0.674,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 50000, \"ttl_12h_tokens\": 0}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 50000, \"ttl_12h_tokens\": 0}}}}}}\n",
+      "known": 0.28700000000000003,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 272000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 272000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.6809999999999999,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 272001, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 272001, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 1.312004,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-sol\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 1.424,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-terra\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}}}}\n",
+      "known": 0.20600000000000002,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-terra\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.1685,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-terra\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}, \"last_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 0, \"ttl_12h_tokens\": 50000}}}}}}\n",
+      "known": 0.787,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-6.1-terra\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.712,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-daybreak-blue-latest\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 100000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 0.678,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\": \"turn_context\", \"payload\": {\"model\": \"gpt-daybreak-red-latest\"}}\n{\"type\": \"event_msg\", \"payload\": {\"type\": \"token_count\", \"info\": {\"total_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}, \"last_token_usage\": {\"input_tokens\": 300000, \"output_tokens\": 10000, \"input_tokens_details\": {\"cached_tokens\": 20000, \"cache_write_tokens\": 50000, \"cache_write_tokens_details\": {\"ttl_30m_tokens\": 30000, \"ttl_12h_tokens\": 20000}}}}}}\n",
+      "known": 9.1125,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"fork-child\",\"parent_thread_id\":\"fork-root\",\"forked_from_id\":\"fork-root\",\"thread_source\":\"subagent\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":500000,\"cached_input_tokens\":100000,\"output_tokens\":5000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":2000000,\"cached_input_tokens\":400000,\"output_tokens\":20000}}}}\n",
+      "known": 0.176,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"fork-root\",\"thread_source\":\"user\"}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"metadata-child\",\"parent_thread_id\":\"metadata-root\",\"thread_source\":\"subagent\"}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.176,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"metadata-root\"}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"missing-model\",\"parent_thread_id\":\"parent\",\"forked_from_id\":\"parent\",\"thread_source\":\"subagent\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.0,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"nonfork\",\"thread_source\":\"user\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":2000000,\"cached_input_tokens\":400000,\"output_tokens\":20000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"reversed-fork\",\"parent_thread_id\":\"parent\",\"forked_from_id\":\"parent\",\"thread_source\":\"subagent\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":900000,\"cached_input_tokens\":180000,\"output_tokens\":9000}}}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1900000,\"cached_input_tokens\":380000,\"output_tokens\":19000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"session_meta\",\"payload\":{\"id\":\"unknown-fork\",\"parent_thread_id\":\"parent\",\"forked_from_id\":\"parent\",\"thread_source\":\"subagent\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"turn_context\",\"payload\":{\"model\":\"unknown-model\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":2000000,\"cached_input_tokens\":400000,\"output_tokens\":20000}}}}\n",
+      "known": 0.0,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"codex-auto-review\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.0,
+      "estimated": 2.2,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"computer-use-preview\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":0,\"output_tokens\":10000}}}}\n",
+      "known": 3.12,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.4-mini\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.2025,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.5-cyber\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 3.375,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-cyber\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":282000},\"last_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":282000}}}}\n",
+      "known": 3.3375,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-cyber\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":282001},\"last_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":282001}}}}\n",
+      "known": 6.300025,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-cyber\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 7.0,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.176,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 0.5780000000000001,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"being-written\":",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"damaged\":\n",
+      "known": 3.48,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":2000000,\"cached_input_tokens\":400000,\"output_tokens\":20000}}}}\n",
+      "known": 6.96,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 1.98,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-5.6-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 1.76,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-astra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 1.445,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-astra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 8.7,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-astra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000},\"last_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000}}}}\n",
+      "known": 2.32,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-astra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001},\"last_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001}}}}\n",
+      "known": 4.39002,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-astra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 4.95,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"cache_write_input_tokens\":500000,\"output_tokens\":10000,\"total_tokens\":1010000},\"last_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"cache_write_input_tokens\":500000,\"output_tokens\":10000,\"total_tokens\":1010000}}}}\n",
+      "known": 0.1965,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.087,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-luna\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.0495,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 0.28900000000000003,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":200000,\"cached_input_tokens\":40000,\"cache_write_input_tokens\":100000,\"output_tokens\":20000}}}}\n",
+      "known": 0.5780000000000001,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":200000,\"cached_input_tokens\":40000,\"cache_write_input_tokens\":100000,\"output_tokens\":20000}}}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":250000,\"output_tokens\":30000}}}}\n",
+      "known": 0.5780000000000001,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 1.74,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000},\"last_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000}}}}\n",
+      "known": 0.464,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001},\"last_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001}}}}\n",
+      "known": 0.878004,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.99,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 1.09,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 0.28700000000000003,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 1.72,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000},\"last_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000}}}}\n",
+      "known": 0.454,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001},\"last_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001}}}}\n",
+      "known": 0.858004,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.97,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-sol\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 1.07,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 0.14350000000000002,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.86,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000},\"last_token_usage\":{\"input_tokens\":272000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282000}}}}\n",
+      "known": 0.227,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001},\"last_token_usage\":{\"input_tokens\":272001,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":282001}}}}\n",
+      "known": 0.429002,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":0,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.485,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-6.1-terra\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 0.535,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-daybreak-blue-latest\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000},\"last_token_usage\":{\"input_tokens\":100000,\"cached_input_tokens\":20000,\"cache_write_input_tokens\":50000,\"output_tokens\":10000,\"total_tokens\":110000}}}}\n",
+      "known": 0.5780000000000001,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"gpt-daybreak-red-latest\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000},\"last_token_usage\":{\"input_tokens\":300000,\"cached_input_tokens\":100000,\"cache_write_input_tokens\":100000,\"output_tokens\":10000,\"total_tokens\":310000}}}}\n",
+      "known": 7.0,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"o3-deep-research\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 8.9,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"o4-mini\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.9790000000000001,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"o4-mini-2025-04-16\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 0.9790000000000001,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"o4-mini-deep-research\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000000,\"cached_input_tokens\":200000,\"output_tokens\":10000}}}}\n",
+      "known": 1.78,
+      "estimated": 0.0,
+      "complete": true,
+      "has_usage": true
+    },
+    {
+      "log": "{\"type\":\"turn_context\",\"payload\":{\"model\":\"unknown-model\"}}\n{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":1000,\"cached_input_tokens\":0,\"output_tokens\":10}}}}\n",
+      "known": 0.0,
+      "estimated": 0.0,
+      "complete": false,
+      "has_usage": true
+    }
+  ]
+}

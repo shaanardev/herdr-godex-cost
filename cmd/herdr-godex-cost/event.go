@@ -32,6 +32,10 @@ func eventAction(ctx context.Context, command *cli.Command) (err error) {
 		}
 		return nil
 	}
+	return startWorker(ctx, command, paneID)
+}
+
+func startWorker(ctx context.Context, command *cli.Command, paneID string) (err error) {
 	binary, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("find worker executable: %w", err)

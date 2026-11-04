@@ -57,7 +57,7 @@ func TestRefreshAction(t *testing.T) {
 printf '%s\n' "$*" >> "$TEST_REFRESH_CALLS"
 case "$1 $2" in
  "pane get") printf '%s\n' "$TEST_REFRESH_REPLY" ;;
- "pane report-metadata"|"agent read") ;;
+ "pane report-metadata"|"pane read") ;;
  *) echo "unexpected command: $*" >&2; exit 1 ;;
 esac
 `

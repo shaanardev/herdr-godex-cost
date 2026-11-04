@@ -60,7 +60,7 @@ func (c Client) runTypedCommand[T any](ctx context.Context, args ...string) (*CL
 }
 
 func (c Client) ReadPane(ctx context.Context, pane string) ([]byte, error) {
-	return c.runCommand(ctx, "agent", "read", pane, "--source", "visible", "--lines", "100")
+	return c.runCommand(ctx, "pane", "read", pane, "--source", "visible", "--lines", "16", "--format", "text")
 }
 
 // UpdatePane publishes an already formatted estimate. Formatting belongs to pricing.
@@ -108,4 +108,15 @@ func (c Client) ReadApiSnapshot(ctx context.Context) (*SessionSnapshotResult, er
 		Type:     response.Result.Type,
 		Snapshot: response.Result.Snapshot,
 	}, nil
+}
+
+// ReadPanes returns the pane snapshots used to initialize the plugin at startup.
+func (c Client) ReadPanes(ctx context.Context) ([]PaneInfo, error) {
+	response, err := c.runTypedCommand[struct {
+		Panes []PaneInfo `json:"panes"`
+	}](ctx, "pane", "list")
+	if err != nil {
+		return nil, err
+	}
+	return response.Result.Panes, nil
 }

@@ -2,6 +2,7 @@ package codex
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +26,7 @@ type TokenCountEvent struct {
 // models are a pricing concern and are deliberately not interpreted here.
 type RolloutUsage struct {
 	SessionID            string
+	FirstModel           string
 	ParentThreadID       string
 	ForkedFromID         string
 	ThreadSource         string
@@ -103,9 +105,15 @@ func (parser *rolloutParser) processEvent(event rolloutEvent) {
 		var context struct {
 			Model string `json:"model"`
 		}
-		if err := decodeUsageObject(event.Payload, &context); err != nil || context.Model == "" {
+		if err := decodeUsageObject(event.Payload, &context); err != nil {
 			parser.usage.Complete = false
 			return
+		}
+		if context.Model == "" {
+			return
+		}
+		if !parser.modelSeen {
+			parser.usage.FirstModel = context.Model
 		}
 		parser.model = context.Model
 		parser.modelSeen = true
@@ -122,12 +130,18 @@ func (parser *rolloutParser) processEvent(event rolloutEvent) {
 		if message.Type != "token_count" {
 			return
 		}
+		if len(message.Info) == 0 || bytes.Equal(bytes.TrimSpace(message.Info), []byte("null")) {
+			return
+		}
 		var info struct {
 			Total json.RawMessage `json:"total_token_usage"`
 			Last  json.RawMessage `json:"last_token_usage"`
 		}
 		if err := decodeUsageObject(message.Info, &info); err != nil {
 			parser.usage.Complete = false
+			return
+		}
+		if len(info.Total) == 0 || bytes.Equal(bytes.TrimSpace(info.Total), []byte("null")) {
 			return
 		}
 		total, err := ParseTokenUsage(info.Total)
@@ -151,7 +165,7 @@ func (parser *rolloutParser) processEvent(event rolloutEvent) {
 		}
 		var last *TokenUsage
 		var lastErr error
-		if len(info.Last) > 0 {
+		if len(info.Last) > 0 && !bytes.Equal(bytes.TrimSpace(info.Last), []byte("null")) {
 			last, lastErr = ParseTokenUsage(info.Last)
 		}
 		if lastErr != nil {

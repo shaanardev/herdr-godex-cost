@@ -75,7 +75,7 @@ func TestTreeDiagnostics(t *testing.T) {
 				edges = append(edges, [2]string{"root", "other"}, [2]string{"child", "shared"}, [2]string{"other", "shared"})
 			}
 			db := treeDatabase(t, home, ids, edges)
-			index, err := codex.NewSessionIndex(context.Background(), db, home)
+			index, err := codex.NewSessionIndex(context.Background(), home, db)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -166,7 +166,7 @@ func TestTreeTraversalLimit(t *testing.T) {
 				ids = append(ids, id)
 			}
 			db := treeDatabase(t, home, ids, edges)
-			index, err := codex.NewSessionIndex(context.Background(), db, home)
+			index, err := codex.NewSessionIndex(context.Background(), home, db)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -199,19 +199,20 @@ func TestResolutionDiagnosticsLogChangesAndRecovery(t *testing.T) {
 	previous := slog.Default()
 	slog.SetDefault(slog.New(slog.NewTextHandler(&output, nil)))
 	t.Cleanup(func() { slog.SetDefault(previous) })
-	runner := Runner{lastResolutionDiagnostics: make(map[string]string)}
+	runner := NewRunner(nil, "", "", 0)
+	runner.lastDiagnostics = make(map[string]string)
 	warning := []error{fmt.Errorf("child rollout: %w", ErrSessionNotFound)}
-	runner.logResolutionDiagnostics("pane", warning)
-	runner.logResolutionDiagnostics("pane", warning)
+	runner.logDiagnostics("pane", "resolve session tree", warning)
+	runner.logDiagnostics("pane", "resolve session tree", warning)
 	if got := strings.Count(output.String(), "level=WARN"); got != 1 {
 		t.Fatalf("unchanged warnings logged %d times", got)
 	}
-	runner.logResolutionDiagnostics("pane", []error{errors.New("different problem")})
-	runner.logResolutionDiagnostics("pane", nil)
-	if len(runner.lastResolutionDiagnostics) != 0 {
+	runner.logDiagnostics("pane", "resolve session tree", []error{errors.New("different problem")})
+	runner.logDiagnostics("pane", "resolve session tree", nil)
+	if len(runner.lastDiagnostics) != 0 {
 		t.Fatal("recovery did not clear remembered warnings")
 	}
-	runner.logResolutionDiagnostics("pane", warning)
+	runner.logDiagnostics("pane", "resolve session tree", warning)
 	if got := strings.Count(output.String(), "level=WARN"); got != 3 {
 		t.Fatalf("changed or recurring warnings lost: %s", output.String())
 	}
@@ -220,7 +221,7 @@ func TestResolutionDiagnosticsLogChangesAndRecovery(t *testing.T) {
 func TestResolveTreeReusesVerifiedRoot(t *testing.T) {
 	home := t.TempDir()
 	writeRollout(t, home, "root", "")
-	index, err := codex.NewSessionIndex(context.Background(), nil, home)
+	index, err := codex.NewSessionIndex(context.Background(), home)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -256,7 +257,7 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 	const second = "abcdefab-1234-1234-1234-123456789abc"
 	writeRollout(t, home, first, "")
 	writeRollout(t, home, second, "")
-	index, err := codex.NewSessionIndex(context.Background(), nil, home)
+	index, err := codex.NewSessionIndex(context.Background(), home)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -290,7 +291,7 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 	}
 	// Even if one duplicate disappears during the pass, a uniquely scanned
 	// prefix must not override the ambiguity already recorded by the index.
-	ambiguousIndex, err := codex.NewSessionIndex(context.Background(), nil, home)
+	ambiguousIndex, err := codex.NewSessionIndex(context.Background(), home)
 	if err != nil {
 		t.Fatal(err)
 	}

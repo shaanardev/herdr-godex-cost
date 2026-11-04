@@ -2,9 +2,9 @@ package codex
 
 import "regexp"
 
-var FullUUIDPattern = regexp.MustCompile(`(?i)(^|[^0-9a-f])([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})($|[^0-9a-f])`)
+var FullUUIDPattern = regexp.MustCompile(`(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
 
-var TruncatedUUIDPattern = regexp.MustCompile(`(?i)(^|[^0-9a-f])([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{0,11})(…|\.{3})`)
+var TruncatedUUIDPattern = regexp.MustCompile(`(?i)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{0,11})(…|\.{3})`)
 
 var validUUIDPrefix = regexp.MustCompile(`(?i)^[0-9a-f]{8}(?:-[0-9a-f]{1,4}){0,3}(?:-[0-9a-f]{0,11})?$`)
 

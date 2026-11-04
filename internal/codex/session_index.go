@@ -21,11 +21,11 @@ var (
 type SessionIndex struct {
 	// Diagnostics records damaged metadata skipped while building the index.
 	Diagnostics  []error
-	db           *sql.DB
 	home         string
 	files        map[string]string
 	ambiguous    map[string]struct{}
 	metadata     map[string]SessionMetadata
+	titles       map[string]string
 	children     sessionGraph
 	databaseSeen bool
 	edgesIndexed bool
@@ -35,23 +35,22 @@ func (index *SessionIndex) addDiagnostic(err error) {
 	index.Diagnostics = append(index.Diagnostics, err)
 }
 
-// NewSessionIndex builds an index using an optional caller-owned, read-only database.
-// A nil database uses rollout metadata instead.
-// The caller remains responsible for closing db.
-func NewSessionIndex(ctx context.Context, db *sql.DB, codexHome string) (*SessionIndex, error) {
+// NewSessionIndex combines caller-owned read-only state databases. Without a
+// usable database, it falls back to rollout metadata. Callers close the databases.
+func NewSessionIndex(ctx context.Context, codexHome string, databases ...*sql.DB) (*SessionIndex, error) {
 	if codexHome == "" {
 		return nil, ErrEmptyCodexHome
 	}
 
 	index := &SessionIndex{
-		db:        db,
 		home:      codexHome,
 		files:     make(map[string]string),
 		ambiguous: make(map[string]struct{}),
 		metadata:  make(map[string]SessionMetadata),
+		titles:    make(map[string]string),
 		children:  sessionGraph{},
 	}
-	if err := index.populate(ctx); err != nil {
+	if err := index.populate(ctx, databases); err != nil {
 		return nil, err
 	}
 	return index, nil
@@ -93,6 +92,9 @@ func (index *SessionIndex) SessionIDsByCWD(cwd string) []string {
 	}
 	var matches []string
 	for id, metadata := range index.metadata {
+		if strings.TrimSpace(metadata.CWD) == "" {
+			continue
+		}
 		metadataCWD := filepath.Clean(strings.TrimSpace(metadata.CWD))
 		if resolved, err := filepath.EvalSymlinks(metadataCWD); err == nil {
 			metadataCWD = resolved
@@ -106,21 +108,56 @@ func (index *SessionIndex) SessionIDsByCWD(cwd string) []string {
 	return matches
 }
 
-func (index *SessionIndex) populate(ctx context.Context) error {
-	if index.db != nil {
-		if err := index.indexStateDatabase(ctx); err != nil {
-			return fmt.Errorf("index Codex state database: %w", err)
+// SessionIDsByTitle matches the exact Codex thread name and cwd encoded by
+// Herdr's stripped terminal title: "thread name | directory basename".
+func (index *SessionIndex) SessionIDsByTitle(title, cwd string) []string {
+	if strings.TrimSpace(cwd) == "" {
+		return nil
+	}
+	suffix := " | " + filepath.Base(filepath.Clean(cwd))
+	if !strings.HasSuffix(title, suffix) {
+		return nil
+	}
+	name := strings.TrimSuffix(title, suffix)
+	if name == "" {
+		return nil
+	}
+	var matches []string
+	for _, id := range index.SessionIDsByCWD(cwd) {
+		if index.titles[id] == name {
+			matches = append(matches, id)
+		}
+	}
+	return matches
+}
+
+func (index *SessionIndex) populate(ctx context.Context, databases []*sql.DB) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	for _, db := range databases {
+		if db == nil {
+			continue
+		}
+		if err := index.indexStateDatabase(ctx, db); err != nil {
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			index.addDiagnostic(fmt.Errorf("index Codex state database: %w", err))
 		}
 	}
 	if index.edgesIndexed {
 		return nil
 	}
 
-	candidates, err := index.metadataCandidates()
+	candidates, err := index.metadataCandidates(ctx)
 	if err != nil {
 		return fmt.Errorf("find rollout metadata: %w", err)
 	}
 	for _, path := range candidates {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		safe, err := ResolveRolloutPath(path, index.home)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) {
@@ -168,7 +205,7 @@ func (index *SessionIndex) addRollout(id, path string, metadata *SessionMetadata
 	}
 }
 
-func (index *SessionIndex) metadataCandidates() ([]string, error) {
+func (index *SessionIndex) metadataCandidates(ctx context.Context) ([]string, error) {
 	if index.edgesIndexed {
 		return nil, nil
 	}
@@ -184,6 +221,9 @@ func (index *SessionIndex) metadataCandidates() ([]string, error) {
 
 	var candidates []string
 	err := walkRolloutFiles(index.home, func(path string) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		candidates = append(candidates, path)
 		return nil
 	})
@@ -194,39 +234,39 @@ func (index *SessionIndex) metadataCandidates() ([]string, error) {
 	return candidates, nil
 }
 
-func (index *SessionIndex) indexStateDatabase(ctx context.Context) error {
-	threadColumns, err := index.tableColumns(ctx, "threads")
+func (index *SessionIndex) indexStateDatabase(ctx context.Context, db *sql.DB) error {
+	threadColumns, err := index.tableColumns(ctx, db, "threads")
 	if err != nil {
 		return err
 	}
 	_, hasThreadID := threadColumns["id"]
 	_, hasRolloutPath := threadColumns["rollout_path"]
 	if hasThreadID && hasRolloutPath {
-		index.databaseSeen = true
-		if err := index.readThreadRollouts(ctx); err != nil {
+		if err := index.readThreadRollouts(ctx, db, threadColumns); err != nil {
 			return err
 		}
+		index.databaseSeen = true
 	}
 
-	edgeColumns, err := index.tableColumns(ctx, "thread_spawn_edges")
+	edgeColumns, err := index.tableColumns(ctx, db, "thread_spawn_edges")
 	if err != nil {
 		return err
 	}
 	_, hasParentThreadID := edgeColumns["parent_thread_id"]
 	_, hasChildThreadID := edgeColumns["child_thread_id"]
 	if hasParentThreadID && hasChildThreadID {
-		index.databaseSeen = true
-		index.edgesIndexed = true
-		if err := index.readThreadEdges(ctx); err != nil {
+		if err := index.readThreadEdges(ctx, db); err != nil {
 			return err
 		}
+		index.databaseSeen = true
+		index.edgesIndexed = true
 	}
 	return nil
 }
 
-func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[string]struct{}, error) {
+func (index *SessionIndex) tableColumns(ctx context.Context, db *sql.DB, table string) (map[string]struct{}, error) {
 	// table comes from the fixed schema table names used above.
-	rows, err := index.db.QueryContext(ctx, "PRAGMA table_info("+table+")")
+	rows, err := db.QueryContext(ctx, "PRAGMA table_info("+table+")")
 	if err != nil {
 		return nil, err
 	}
@@ -245,16 +285,23 @@ func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[
 	return columns, rows.Err()
 }
 
-func (index *SessionIndex) readThreadRollouts(ctx context.Context) error {
-	rows, err := index.db.QueryContext(ctx, "SELECT id, rollout_path FROM threads")
+func (index *SessionIndex) readThreadRollouts(ctx context.Context, db *sql.DB, columns map[string]struct{}) error {
+	nameColumn, cwdColumn := "NULL", "NULL"
+	if _, ok := columns["name"]; ok {
+		nameColumn = "name"
+	}
+	if _, ok := columns["cwd"]; ok {
+		cwdColumn = "cwd"
+	}
+	rows, err := db.QueryContext(ctx, "SELECT id, rollout_path, "+nameColumn+", "+cwdColumn+" FROM threads")
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var threadID, rawPath sql.NullString
-		if err := rows.Scan(&threadID, &rawPath); err != nil {
+		var threadID, rawPath, name, cwd sql.NullString
+		if err := rows.Scan(&threadID, &rawPath, &name, &cwd); err != nil {
 			return err
 		}
 		if !threadID.Valid || !rawPath.Valid || !validSessionID.MatchString(threadID.String) {
@@ -285,12 +332,25 @@ func (index *SessionIndex) readThreadRollouts(ctx context.Context) error {
 			metadata = nil
 		}
 		index.addRollout(threadID.String, path, metadata)
+		if metadata != nil && name.Valid && cwd.Valid {
+			actual, actualErr := filepath.EvalSymlinks(metadata.CWD)
+			expected, expectedErr := filepath.EvalSymlinks(cwd.String)
+			if actualErr != nil {
+				actual = filepath.Clean(metadata.CWD)
+			}
+			if expectedErr != nil {
+				expected = filepath.Clean(cwd.String)
+			}
+			if metadata.CWD != "" && cwd.String != "" && actual == expected {
+				index.titles[threadID.String] = name.String
+			}
+		}
 	}
 	return rows.Err()
 }
 
-func (index *SessionIndex) readThreadEdges(ctx context.Context) error {
-	rows, err := index.db.QueryContext(ctx, "SELECT parent_thread_id, child_thread_id FROM thread_spawn_edges")
+func (index *SessionIndex) readThreadEdges(ctx context.Context, db *sql.DB) error {
+	rows, err := db.QueryContext(ctx, "SELECT parent_thread_id, child_thread_id FROM thread_spawn_edges")
 	if err != nil {
 		return err
 	}

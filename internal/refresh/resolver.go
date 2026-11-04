@@ -11,7 +11,10 @@ import (
 	"github.com/sarora/herdr-godex-cost/internal/codex"
 )
 
-const maxResolvedSessions = 512
+const (
+	maxResolvedSessions = 512
+	sessionIDHexDigits  = "0123456789abcdefABCDEF"
+)
 
 var (
 	ErrSessionNotFound  = errors.New("Codex session could not be resolved")
@@ -76,8 +79,11 @@ func (resolver *SessionResolver) Resolve(input PaneSessionInput) (*SessionResolu
 		}
 	}
 
+	if strings.TrimSpace(input.CWD) == "" {
+		return nil, ErrSessionNotFound
+	}
 	candidates := extractCandidates(input.TerminalText)
-	visibleMatches, err := resolver.matchesFromCandidates(candidates, "")
+	visibleMatches, err := resolver.matchesFromCandidates(candidates, input.CWD)
 	if err != nil {
 		return nil, fmt.Errorf("resolve Codex session from pane text: %w", err)
 	}
@@ -134,16 +140,9 @@ func (resolver *SessionResolver) resolveTree(root *codex.Rollout, source Resolut
 }
 
 func (resolver *SessionResolver) matchesFromTerminalInfo(title, cwd string) ([]*codex.Rollout, error) {
-	if strings.TrimSpace(title) == "" || strings.TrimSpace(cwd) == "" ||
-		!strings.Contains(strings.ToLower(title), "codex") {
-		return nil, nil
-	}
-
-	candidates := extractCandidates(title)
-	if len(candidates) == 0 {
-		for _, id := range resolver.index.SessionIDsByCWD(cwd) {
-			candidates = append(candidates, sessionIDCandidate{ID: id})
-		}
+	var candidates []sessionIDCandidate
+	for _, id := range resolver.index.SessionIDsByTitle(title, cwd) {
+		candidates = append(candidates, sessionIDCandidate{ID: id})
 	}
 	return resolver.matchesFromCandidates(candidates, cwd)
 }
@@ -155,7 +154,7 @@ func (resolver *SessionResolver) matchesFromCandidates(candidates []sessionIDCan
 			prefixes = append(prefixes, candidate.Prefix)
 		}
 	}
-	prefixMatches, err := resolver.files.FindByPrefixes(prefixes)
+	prefixMatches, err := resolver.files.FindByPrefixes(prefixes, cwd)
 	if err != nil {
 		if errors.Is(err, codex.ErrAmbiguousRollout) {
 			return nil, ErrAmbiguousSession
@@ -230,15 +229,24 @@ type sessionIDCandidate struct {
 func extractCandidates(text string) []sessionIDCandidate {
 	seen := make(map[string]struct{})
 	var candidates []sessionIDCandidate
-	for _, match := range codex.FullUUIDPattern.FindAllStringSubmatch(text, -1) {
-		id := strings.ToLower(match[2])
+	for _, location := range codex.FullUUIDPattern.FindAllStringIndex(text, -1) {
+		start, end := location[0], location[1]
+		if (start > 0 && strings.ContainsRune(sessionIDHexDigits, rune(text[start-1]))) ||
+			(end < len(text) && strings.ContainsRune(sessionIDHexDigits, rune(text[end]))) {
+			continue
+		}
+		id := strings.ToLower(text[start:end])
 		if _, exists := seen["id:"+id]; !exists {
 			seen["id:"+id] = struct{}{}
 			candidates = append(candidates, sessionIDCandidate{ID: id})
 		}
 	}
-	for _, match := range codex.TruncatedUUIDPattern.FindAllStringSubmatch(text, -1) {
-		prefix := strings.ToLower(match[2])
+	for _, location := range codex.TruncatedUUIDPattern.FindAllStringSubmatchIndex(text, -1) {
+		start := location[0]
+		if start > 0 && strings.ContainsRune(sessionIDHexDigits, rune(text[start-1])) {
+			continue
+		}
+		prefix := strings.ToLower(text[location[2]:location[3]])
 		if _, exists := seen["prefix:"+prefix]; !exists {
 			seen["prefix:"+prefix] = struct{}{}
 			candidates = append(candidates, sessionIDCandidate{Prefix: prefix})

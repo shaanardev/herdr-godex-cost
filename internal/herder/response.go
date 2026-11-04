@@ -43,7 +43,7 @@ type PaneInfo struct {
 	Agent        string            `json:"agent"`
 	AgentStatus  string            `json:"agent_status"`
 	CWD          string            `json:"cwd"`
-	Title        string            `json:"title"`
+	Title        string            `json:"terminal_title_stripped"`
 	Tokens       map[string]string `json:"tokens"`
 	AgentSession *AgentSessionInfo `json:"agent_session"`
 	PaneID       string            `json:"pane_id"`

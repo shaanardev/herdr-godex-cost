@@ -88,7 +88,7 @@ func (files RolloutFiles) FindByID(id string) (*Rollout, error) {
 // FindByPrefix returns one unambiguous metadata match. Prefixes must contain
 // at least eight hexadecimal characters to avoid matching ordinary pane text.
 func (files RolloutFiles) FindByPrefix(prefix string) (*Rollout, error) {
-	matches, err := files.FindByPrefixes([]string{prefix})
+	matches, err := files.FindByPrefixes([]string{prefix}, "")
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +100,9 @@ func (files RolloutFiles) FindByPrefix(prefix string) (*Rollout, error) {
 }
 
 // FindByPrefixes resolves all prefixes during one directory scan. Unmatched
-// prefixes are omitted; an ambiguous prefix fails the lookup.
-func (files RolloutFiles) FindByPrefixes(prefixes []string) (map[string]*Rollout, error) {
+// prefixes are omitted; an ambiguous prefix fails the lookup. A nonempty cwd
+// filters candidates before ambiguity is determined.
+func (files RolloutFiles) FindByPrefixes(prefixes []string, cwd string) (map[string]*Rollout, error) {
 	matches := make(map[string]*Rollout)
 	if len(prefixes) == 0 {
 		return matches, nil
@@ -111,6 +112,10 @@ func (files RolloutFiles) FindByPrefixes(prefixes []string) (map[string]*Rollout
 			return nil, fmt.Errorf("invalid Codex session ID prefix %q", prefix)
 		}
 	}
+	expectedCWD := filepath.Clean(strings.TrimSpace(cwd))
+	if resolved, err := filepath.EvalSymlinks(expectedCWD); err == nil {
+		expectedCWD = resolved
+	}
 	err := walkRolloutFiles(files.Home, func(path string) error {
 		rollout, err := files.Read(path)
 		if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) || errors.Is(err, ErrRolloutNotFound) {
@@ -118,6 +123,18 @@ func (files RolloutFiles) FindByPrefixes(prefixes []string) (map[string]*Rollout
 		}
 		if err != nil {
 			return err
+		}
+		if cwd != "" {
+			if strings.TrimSpace(rollout.Metadata.CWD) == "" {
+				return nil
+			}
+			actualCWD := filepath.Clean(strings.TrimSpace(rollout.Metadata.CWD))
+			if resolved, err := filepath.EvalSymlinks(actualCWD); err == nil {
+				actualCWD = resolved
+			}
+			if actualCWD != expectedCWD {
+				return nil
+			}
 		}
 		for _, prefix := range prefixes {
 			if !strings.HasPrefix(rollout.Metadata.ID, prefix) {

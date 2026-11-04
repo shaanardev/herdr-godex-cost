@@ -46,6 +46,7 @@ func newCommand() *cli.Command {
 			{Name: "refresh", Usage: "Refresh the cost for one pane", Action: refreshAction},
 			{Name: "watch", Usage: "Refresh while a Codex pane is working", Action: watchAction},
 			{Name: "event", Usage: "Handle a Herdr agent-status event", Action: eventAction},
+			{Name: "startup", Usage: "Refresh existing panes and start active workers", Action: startupAction},
 		},
 	}
 	for _, subcommand := range command.Commands {
@@ -76,7 +77,7 @@ func prepareCommand(ctx context.Context, command *cli.Command) (context.Context,
 	if err != nil {
 		return ctx, cli.Exit(err, 2)
 	}
-	if paneID == "" {
+	if paneID == "" && command.Name == "event" {
 		return ctx, nil
 	}
 	if err := command.Set("pane", paneID); err != nil {

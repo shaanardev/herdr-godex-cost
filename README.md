@@ -15,8 +15,8 @@ go build -o bin/herdr-godex-cost ./cmd/herdr-godex-cost
 herdr plugin link "$PWD"
 ```
 
-The manifest exposes a focused-pane refresh action and an agent-status event
-hook. The event starts one worker per working Codex pane. It refreshes immediately,
+The manifest initializes existing panes at startup and exposes a focused-pane
+refresh action and an agent-status event hook. The event starts one worker per working Codex pane. It refreshes immediately,
 waits five seconds after each working pass, and exits after refreshing the first
 idle snapshot. Each pass fetches the pane once.
 Workers use an OS file lock that releases automatically when the process exits.
@@ -41,8 +41,10 @@ reported once by the entry point, and signal cancellation exits cleanly.
 
 Session resolution tries the reported session ID, visible session IDs, and
 terminal-title/working-directory evidence. Ambiguous matches are rejected.
-The newest usable `state_*.sqlite` supplies the session index; rollout metadata
-provides a fallback when the database is unavailable.
+All usable `state_*.sqlite` databases contribute sessions and spawn edges; rollout
+metadata provides a fallback when databases are unavailable. Visible IDs are
+verified against the pane working directory. Title fallback matches the exact
+indexed thread name in `terminal_title_stripped` (`name | directory basename`).
 
 Estimates display as `$1.23`, `~$1.23` for partial results, or
 `$1.23(+$0.45)` when an auto-review estimate is included. `...` means no usage;
@@ -76,5 +78,7 @@ shown. The port does not install or remove legacy Codex hooks. Linux process-sta
 matching, subscription-credit overrides, and TUI credit scraping from the
 standalone watchdog are not included; this plugin estimates API-equivalent USD.
 
-CLI tests cover flag precedence, plugin context, action errors, process exit codes,
-and worker locking. Live Herdr still needs a manual smoke test.
+The fixture tests run without Python or network access. Built-binary integration
+tests exercise startup/event worker spawning, lock arbitration, final publication,
+and shutdown against a fake Herdr executable. Live Herdr still needs a manual
+smoke test.

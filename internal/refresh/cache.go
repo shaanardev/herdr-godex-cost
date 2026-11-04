@@ -11,7 +11,7 @@ import (
 )
 
 // Identifies the refresh cache and rollout fingerprint format.
-const CacheVersion = 12
+const CacheVersion = 13
 
 // Loads and stores refresh results for one session fingerprint.
 type Cache struct {

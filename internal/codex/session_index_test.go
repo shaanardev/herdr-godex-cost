@@ -36,7 +36,7 @@ func TestDatabaseIndex(t *testing.T) {
 	if _, err := db.Exec("INSERT INTO threads VALUES (?, ?)", "root", path); err != nil {
 		t.Fatal(err)
 	}
-	index, err := NewSessionIndex(context.Background(), db, home)
+	index, err := NewSessionIndex(context.Background(), home, db)
 	if err != nil {
 		t.Fatal(err)
 	}

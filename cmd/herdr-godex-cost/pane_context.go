@@ -25,6 +25,9 @@ func NewPaneContext(command, explicitPane string) *paneContext {
 }
 
 func (pane paneContext) resolve() (string, error) {
+	if pane.Command == "startup" {
+		return "", nil
+	}
 	if id := strings.TrimSpace(pane.ExplicitPane); id != "" {
 		return id, nil
 	}

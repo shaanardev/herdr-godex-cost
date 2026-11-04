@@ -16,6 +16,15 @@ type Rates struct {
 	OutputUSD        float64
 }
 
+func NewRates(inputUSD, cacheReadUSD, cacheWrite30mUSD, outputUSD float64) *Rates {
+	return &Rates{
+		InputUSD:         inputUSD,
+		CacheReadUSD:     cacheReadUSD,
+		CacheWrite30mUSD: cacheWrite30mUSD,
+		OutputUSD:        outputUSD,
+	}
+}
+
 const (
 	longContextInputMultiplier  = 2.0
 	longContextOutputMultiplier = 1.5
