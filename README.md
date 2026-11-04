@@ -134,7 +134,7 @@ The previous value is retained during a brief restart until new usage appears.
   uses reported session IDs, visible terminal text, title/directory evidence,
   and local process start times. The process fallback requires one top-level
   rollout in the same directory within one minute of the Codex process
-  starting; it rejects ambiguous matches. Each session lookup also has a
+  starting; it rejects ambiguous matches. Each refresh pass also has a
   one-minute execution timeout, bounded by any shorter caller deadline. Resumed older sessions may still
   require Herdr’s Codex integration to report their session ID.
 - **Partial totals:** inspect worker logs named `watch-*.log` in the plugin state

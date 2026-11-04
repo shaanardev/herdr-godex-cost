@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"math"
@@ -28,7 +29,7 @@ func TestUpstreamPricingParity(t *testing.T) {
 		t.Fatal("upstream fixture set is empty or has no provenance")
 	}
 	for i, f := range golden.Fixtures {
-		u, err := ParseRollout(strings.NewReader(f.Log))
+		u, err := ParseRollout(context.Background(), strings.NewReader(f.Log))
 		if err != nil {
 			t.Fatal(err)
 		}

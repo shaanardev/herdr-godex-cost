@@ -3,6 +3,7 @@ package codex
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,12 +50,18 @@ type rolloutParser struct {
 
 // Reads session metadata, turn context, and token count events from a
 // Codex rollout. It normalizes counters but does not estimate or price usage.
-func ParseRollout(input io.Reader) (*RolloutUsage, error) {
+func ParseRollout(ctx context.Context, input io.Reader) (*RolloutUsage, error) {
 	parser := rolloutParser{usage: RolloutUsage{Complete: true}}
 	reader := bufio.NewReader(input)
 
 	for {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		line, readErr := reader.ReadBytes('\n')
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		if len(line) != 0 {
 			var event rolloutEvent
 			if err := json.Unmarshal(line, &event); err != nil {

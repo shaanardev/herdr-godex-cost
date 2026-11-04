@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -30,7 +31,7 @@ func TestRolloutEstimates(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			usage, err := ParseRollout(strings.NewReader(test.log))
+			usage, err := ParseRollout(context.Background(), strings.NewReader(test.log))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -54,7 +55,7 @@ type brokenReader struct{}
 
 func (brokenReader) Read([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
 func TestRolloutReadError(t *testing.T) {
-	_, err := ParseRollout(brokenReader{})
+	_, err := ParseRollout(context.Background(), brokenReader{})
 	if !errors.Is(err, io.ErrUnexpectedEOF) {
 		t.Fatalf("lost read error: %v", err)
 	}
@@ -82,7 +83,7 @@ func TestLongContextPricingBoundaries(t *testing.T) {
 			}
 			log := fmt.Sprintf(`{"type":"turn_context","payload":{"model":%q}}`+"\n"+
 				`{"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":%s%s}}}`+"\n", test.model, counters, last)
-			usage, err := ParseRollout(strings.NewReader(log))
+			usage, err := ParseRollout(context.Background(), strings.NewReader(log))
 			if err != nil {
 				t.Fatal(err)
 			}

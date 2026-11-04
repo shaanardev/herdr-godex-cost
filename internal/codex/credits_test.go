@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	"math"
 	"strings"
 	"testing"
@@ -11,7 +12,7 @@ func TestCreditEstimateUsesCreditRates(t *testing.T) {
 	log := `{"type":"turn_context","payload":{"model":"gpt-6.1-sol"}}
 {"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000000,"cached_input_tokens":200000,"cache_write_input_tokens":100000,"output_tokens":100000},"last_token_usage":{"input_tokens":1000000,"cached_input_tokens":200000,"cache_write_input_tokens":100000,"output_tokens":100000}}}}
 `
-	usage, err := ParseRollout(strings.NewReader(log))
+	usage, err := ParseRollout(context.Background(), strings.NewReader(log))
 	if err != nil {
 		t.Fatal(err)
 	}

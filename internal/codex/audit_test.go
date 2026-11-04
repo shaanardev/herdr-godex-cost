@@ -1,6 +1,7 @@
 package codex
 
 import (
+	"context"
 	"strings"
 	"testing"
 )
@@ -11,7 +12,7 @@ func TestTokenUpdatesWithoutRequestUsage(t *testing.T) {
 	log := `{"type":"event_msg","payload":{"type":"token_count","info":null}}` + "\n" + model +
 		`{"type":"turn_context","payload":{}}` + "\n" + count +
 		`{"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":null}}}` + "\n"
-	usage, err := ParseRollout(strings.NewReader(log))
+	usage, err := ParseRollout(context.Background(), strings.NewReader(log))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -26,7 +27,7 @@ func TestForkBaselineRequiresPricedFirstModel(t *testing.T) {
 		log := `{"type":"session_meta","payload":{"id":"child","thread_source":"subagent","parent_thread_id":"parent","forked_from_id":"parent"}}` + "\n" +
 			`{"type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":1000000}}}}` + "\n" +
 			`{"type":"turn_context","payload":{"model":"` + model + `"}}` + "\n"
-		usage, err := ParseRollout(strings.NewReader(log))
+		usage, err := ParseRollout(context.Background(), strings.NewReader(log))
 		if err != nil {
 			t.Fatal(err)
 		}

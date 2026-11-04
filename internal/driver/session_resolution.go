@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -40,7 +41,10 @@ func (resolution *SessionResolution) addDiagnostic(err error) {
 }
 
 // Computes a versioned fingerprint for the resolved tree.
-func (resolution *SessionResolution) Fingerprint() (string, error) {
+func (resolution *SessionResolution) Fingerprint(ctx context.Context) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	paths := make([]string, 0, len(resolution.Sessions))
 	for _, session := range resolution.Sessions {
 		paths = append(paths, session.RolloutPath)
@@ -57,6 +61,9 @@ func (resolution *SessionResolution) Fingerprint() (string, error) {
 	slices.Sort(paths)
 	paths = slices.Compact(paths)
 	for _, path := range paths {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
 		info, err := os.Stat(path)
 		if err != nil {
 			return "", fmt.Errorf("stat rollout %q for fingerprint: %w", path, err)

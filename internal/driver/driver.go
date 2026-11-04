@@ -20,8 +20,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// Bound a whole lookup, independently of the timestamp window used for matching.
-const sessionResolutionTimeout = time.Minute
+// Limit each refresh pass to one minute, including pane lookup, parsing,
+// and metadata publication.
+const refreshTimeout = time.Minute
 
 // Runner coordinates session resolution, usage estimates, pane metadata, and
 // polling. Each pass rebuilds its index to discover new sessions and subagents.
@@ -71,11 +72,18 @@ func (runner Runner) sessionIndex(ctx context.Context) (*codex.SessionIndex, err
 
 // Refresh updates a single pane, preserving its last value during a restart.
 func (runner Runner) Refresh(ctx context.Context, paneID string) error {
+	_, err := runner.refreshPass(ctx, paneID)
+	return err
+}
+
+func (runner Runner) refreshPass(ctx context.Context, paneID string) (*herder.PaneInfo, error) {
+	ctx, cancel := context.WithTimeout(ctx, refreshTimeout)
+	defer cancel()
 	pane, err := runner.HerdrClient.ReadPaneInfo(ctx, paneID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return runner.refreshPane(ctx, paneID, pane)
+	return pane, runner.refreshPane(ctx, paneID, pane)
 }
 
 // refreshPane uses the status snapshot already fetched by the caller.
@@ -99,7 +107,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 		return err
 	}
 	runner.logDiagnostics(paneID, "resolve session tree", resolution.Diagnostics)
-	fingerprint, err := resolution.Fingerprint()
+	fingerprint, err := resolution.Fingerprint(ctx)
 	if err != nil {
 		return err
 	}
@@ -120,13 +128,19 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 		}
 		estimate = *codex.NewEstimate(resolution.Incomplete())
 		for _, session := range resolution.Sessions {
-			usage, readErr := readUsage(session.RolloutPath)
+			usage, readErr := readUsage(ctx, session.RolloutPath)
 			if readErr != nil {
+				if ctx.Err() != nil {
+					return ctx.Err()
+				}
 				estimate.Incomplete = true
 				slog.Warn("read rollout", "path", session.RolloutPath, "error", readErr)
 				continue
 			}
 			estimate.Add(usage.Estimate())
+		}
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 		// Retry damaged files on the next pass, even if their stat data is unchanged.
 		if !estimate.Incomplete {
@@ -134,6 +148,9 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 				slog.Warn("write cache", "error", err)
 			}
 		}
+	}
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	display := estimate.String()
 	if mode == "credit" {
@@ -167,13 +184,13 @@ func (runner Runner) logDiagnostics(paneID, stage string, diagnostics []error) {
 	slog.Warn(stage, "pane", paneID, "error", combined)
 }
 
-func readUsage(path string) (*codex.RolloutUsage, error) {
+func readUsage(ctx context.Context, path string) (*codex.RolloutUsage, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	return codex.ParseRollout(file)
+	return codex.ParseRollout(ctx, file)
 }
 
 // Watch reads each pane snapshot once and refreshes it, including the first
@@ -197,16 +214,15 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		pane, err := runner.HerdrClient.ReadPaneInfo(ctx, paneID)
-		if err != nil {
+		pane, err := runner.refreshPass(ctx, paneID)
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		if pane == nil {
 			return err
 		}
 		if pane.Agent != "codex" {
 			return nil
-		}
-		err = runner.refreshPane(ctx, paneID, pane)
-		if ctx.Err() != nil {
-			return ctx.Err()
 		}
 		if pane.AgentStatus != "working" {
 			return err
@@ -224,8 +240,6 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 }
 
 func (runner Runner) resolvePaneSession(ctx context.Context, paneID string, pane *herder.PaneInfo) (*SessionResolution, error) {
-	ctx, cancel := context.WithTimeout(ctx, sessionResolutionTimeout)
-	defer cancel()
 	index, err := runner.sessionIndex(ctx)
 	if err != nil {
 		return nil, err

@@ -23,6 +23,7 @@ func NewClient(binary string) *Client {
 
 func (c Client) runCommand(ctx context.Context, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, c.binaryPath, args...)
+	cmd.WaitDelay = time.Second
 	out, err := cmd.Output()
 	if err != nil {
 		if ctx.Err() != nil {

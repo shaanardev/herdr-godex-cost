@@ -31,6 +31,7 @@ func (c Client) CodexProcessStart(ctx context.Context, paneID string) (time.Time
 		return time.Time{}, fmt.Errorf("no foreground Codex process")
 	}
 	command := exec.CommandContext(ctx, "ps", "-p", strconv.FormatUint(uint64(pid), 10), "-o", "lstart=")
+	command.WaitDelay = time.Second
 	command.Env = append(os.Environ(), "LC_ALL=C")
 	output, err := command.Output()
 	if err != nil {
