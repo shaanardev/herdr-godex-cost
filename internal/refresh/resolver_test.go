@@ -310,7 +310,7 @@ func TestResolveBatchPrefixCandidates(t *testing.T) {
 }
 
 func TestResolveByProcessStart(t *testing.T) {
-	for _, scenario := range []string{"unique root", "two roots", "wrong directory", "outside window", "at boundary", "just outside", "cancelled"} {
+	for _, scenario := range []string{"unique root", "two roots", "wrong directory", "outside window", "at boundary", "just outside", "cancelled", "unrelated rollout changed", "selected rollout changed"} {
 		t.Run(scenario, func(t *testing.T) {
 			home := t.TempDir()
 			started := time.Date(2026, 11, 4, 22, 27, 37, 0, time.UTC)
@@ -351,6 +351,22 @@ func TestResolveByProcessStart(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			if scenario == "unrelated rollout changed" {
+				path := filepath.Join(home, "sessions", "rollout-other.jsonl")
+				if err := os.WriteFile(path, []byte("damaged\n"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if scenario == "selected rollout changed" {
+				path := filepath.Join(home, "sessions", "rollout-root.jsonl")
+				raw, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(strings.ReplaceAll(string(raw), "/work", "/elsewhere")), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
 			cwd := "/work"
 			if scenario == "wrong directory" {
 				cwd = "/elsewhere"
@@ -362,7 +378,7 @@ func TestResolveByProcessStart(t *testing.T) {
 			}
 			got, err := resolver.ResolveByProcessStart(ctx, cwd, started)
 			switch scenario {
-			case "unique root", "at boundary":
+			case "unique root", "at boundary", "unrelated rollout changed":
 				if err != nil || got.RootThreadID != "root" || got.Source != ResolutionFromProcessStart || len(got.Sessions) != 2 {
 					t.Fatalf("resolution=%+v error=%v", got, err)
 				}

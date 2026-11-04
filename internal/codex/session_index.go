@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 )
 
 var (
@@ -106,6 +107,46 @@ func (index *SessionIndex) SessionIDsByCWD(cwd string) []string {
 	}
 	slices.Sort(matches)
 	return matches
+}
+
+// SessionByProcessStart selects one top-level session from indexed metadata.
+// A second candidate is ambiguous; callers verify the selected rollout before use.
+func (index *SessionIndex) SessionByProcessStart(ctx context.Context, cwd string, started time.Time, window time.Duration) (*SessionMetadata, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if index == nil {
+		return nil, ErrNilSessionIndex
+	}
+	var match *SessionMetadata
+	for _, id := range index.SessionIDsByCWD(cwd) {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		metadata := index.metadata[id]
+		if metadata.ParentThreadID != "" || metadata.ThreadSource == "subagent" || metadata.ThreadSource == "guardian_review" {
+			continue
+		}
+		stamp, err := time.Parse(time.RFC3339Nano, metadata.Timestamp)
+		if err != nil {
+			continue
+		}
+		delta := stamp.Sub(started)
+		if delta < -window || delta > window {
+			continue
+		}
+		if match != nil {
+			return nil, ErrAmbiguousRollout
+		}
+		match = &metadata
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if match == nil {
+		return nil, ErrRolloutNotFound
+	}
+	return match, nil
 }
 
 // SessionIDsByTitle matches the exact Codex thread name and cwd encoded by

@@ -300,43 +300,22 @@ func (resolver *SessionResolver) verifiedRollout(ctx context.Context, id string)
 // ResolveByProcessStart is a fallback for panes without a usable session reference.
 // Require one top-level session in the same directory within one minute.
 func (resolver *SessionResolver) ResolveByProcessStart(ctx context.Context, cwd string, started time.Time) (*SessionResolution, error) {
-	if err := ctx.Err(); err != nil {
+	candidate, err := resolver.index.SessionByProcessStart(ctx, cwd, started, processStartMatchWindow)
+	switch {
+	case errors.Is(err, codex.ErrRolloutNotFound):
+		return nil, ErrSessionNotFound
+	case errors.Is(err, codex.ErrAmbiguousRollout):
+		return nil, ErrAmbiguousSession
+	case err != nil:
 		return nil, err
 	}
-	var match *codex.Rollout
-	for _, id := range resolver.index.SessionIDsByCWD(cwd) {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		rollout, err := resolver.verifiedRollout(ctx, id)
-		if errors.Is(err, ErrSessionNotFound) {
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
-		meta := rollout.Metadata
-		if meta.ParentThreadID != "" || meta.ThreadSource == "subagent" || meta.ThreadSource == "guardian_review" {
-			continue
-		}
-		stamp, err := time.Parse(time.RFC3339Nano, meta.Timestamp)
-		if err != nil {
-			continue
-		}
-		delta := stamp.Sub(started)
-		if delta < -processStartMatchWindow || delta > processStartMatchWindow {
-			continue
-		}
-		if match != nil {
-			return nil, ErrAmbiguousSession
-		}
-		match = rollout
-	}
-	if err := ctx.Err(); err != nil {
+	root, err := resolver.verifiedRollout(ctx, candidate.ID)
+	if err != nil {
 		return nil, err
 	}
-	if match == nil {
+	// Reject metadata replaced since indexing; retry from a fresh index next pass.
+	if root.Metadata != *candidate {
 		return nil, ErrSessionNotFound
 	}
-	return resolver.resolveTree(ctx, match, ResolutionFromProcessStart)
+	return resolver.resolveTree(ctx, root, ResolutionFromProcessStart)
 }
