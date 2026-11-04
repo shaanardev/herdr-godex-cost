@@ -45,7 +45,7 @@ esac
 	if err := os.WriteFile(executable, []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
-	runner := Runner{Herdr: herder.NewClient(executable), CodexHome: home, StateDir: state, Interval: time.Second}
+	runner := NewRunner(herder.NewClient(executable), home, state, time.Second)
 	for range 2 {
 		if err := runner.Refresh(context.Background(), "pane1"); err != nil {
 			t.Fatal(err)
@@ -105,11 +105,13 @@ func TestResolutionAndPathErrors(t *testing.T) {
 }
 
 func TestCacheMissAndReplacement(t *testing.T) {
-	cache := Cache{Path: filepath.Join(t.TempDir(), "cost.json"), SessionID: "root", Fingerprint: "one"}
+	cache := NewCache(filepath.Join(t.TempDir(), "cost.json"), "root", "one")
 	if _, err := cache.Read(); !errors.Is(err, ErrCacheMiss) {
 		t.Fatal(err)
 	}
-	value := codex.Estimate{KnownUSD: 3, HasUsage: true}
+	value := *codex.NewEstimate(false)
+	value.KnownUSD = 3
+	value.HasUsage = true
 	if err := cache.WriteAtomic(value); err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +172,7 @@ esac
 	if err := os.WriteFile(executable, []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
-	runner := Runner{Herdr: herder.NewClient(executable), CodexHome: home, StateDir: state}
+	runner := NewRunner(herder.NewClient(executable), home, state, 0)
 	if err := runner.Refresh(context.Background(), "pane"); err != nil {
 		t.Fatal(err)
 	}

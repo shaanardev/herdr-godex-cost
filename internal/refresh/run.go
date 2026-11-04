@@ -23,12 +23,16 @@ import (
 // Runner holds the dependencies for a refresh. Each pass rebuilds its index
 // so newly spawned descendants and newly created rollouts are discovered.
 type Runner struct {
-	Herdr     *herder.Client
-	CodexHome string
-	StateDir  string
-	Interval  time.Duration
+	HerdrClient *herder.Client
+	CodexHome   string
+	StateDir    string
+	Interval    time.Duration
 	// A watch worker remembers the last diagnostic set until resolution recovers.
 	lastResolutionDiagnostics map[string]string
+}
+
+func NewRunner(herdrClient *herder.Client, codexHome string, stateDir string, interval time.Duration) *Runner {
+	return &Runner{HerdrClient: herdrClient, CodexHome: codexHome, StateDir: stateDir, Interval: interval}
 }
 
 func (runner Runner) sessionIndex(ctx context.Context) (*codex.SessionIndex, error) {
@@ -69,7 +73,7 @@ func (runner Runner) sessionIndex(ctx context.Context) (*codex.SessionIndex, err
 
 // Refresh updates a single pane, preserving its last value during a restart.
 func (runner Runner) Refresh(ctx context.Context, paneID string) error {
-	pane, err := runner.Herdr.ReadPaneInfo(ctx, paneID)
+	pane, err := runner.HerdrClient.ReadPaneInfo(ctx, paneID)
 	if err != nil {
 		return err
 	}
@@ -99,7 +103,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	// Read visible text only when the reported association cannot be verified.
 	resolution, err := resolver.Resolve(input)
 	if errors.Is(err, ErrSessionNotFound) || errors.Is(err, ErrAmbiguousSession) {
-		text, readErr := runner.Herdr.ReadPane(ctx, paneID)
+		text, readErr := runner.HerdrClient.ReadPane(ctx, paneID)
 		if readErr != nil {
 			return readErr
 		}
@@ -109,7 +113,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	if err != nil {
 		if errors.Is(err, ErrSessionNotFound) || errors.Is(err, ErrAmbiguousSession) {
 			if pane.Tokens["cost"] == "" || pane.Tokens["cost"] == "…" {
-				if publishErr := runner.Herdr.UpdatePane(ctx, paneID, "session?"); publishErr != nil {
+				if publishErr := runner.HerdrClient.UpdatePane(ctx, paneID, "session?"); publishErr != nil {
 					return publishErr
 				}
 			}
@@ -164,7 +168,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	if pane.Tokens["cost"] == display {
 		return nil
 	}
-	return runner.Herdr.UpdatePane(ctx, paneID, display)
+	return runner.HerdrClient.UpdatePane(ctx, paneID, display)
 }
 
 // Logs changed warnings once per watch worker. Clearing
@@ -214,7 +218,7 @@ func (runner Runner) Watch(ctx context.Context, paneID string) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		pane, err := runner.Herdr.ReadPaneInfo(ctx, paneID)
+		pane, err := runner.HerdrClient.ReadPaneInfo(ctx, paneID)
 		if err != nil {
 			return err
 		}

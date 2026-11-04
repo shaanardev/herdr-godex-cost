@@ -71,7 +71,7 @@ func TestWatchReadsPaneOncePerPass(t *testing.T) {
 			home := t.TempDir()
 			writeRollout(t, home, "root", "")
 			client, directory := watchHerdr(t, home, test.status, test.nextAgent)
-			runner := Runner{Herdr: client, CodexHome: home, StateDir: t.TempDir(), Interval: time.Millisecond}
+			runner := NewRunner(client, home, t.TempDir(), time.Millisecond)
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			if err := runner.Watch(ctx, "pane"); err != nil {
@@ -99,7 +99,7 @@ func TestWatchCancellationInterruptsWait(t *testing.T) {
 	home := t.TempDir()
 	writeRollout(t, home, "root", "")
 	client, directory := watchHerdr(t, home, "working", "codex")
-	runner := Runner{Herdr: client, CodexHome: home, StateDir: t.TempDir(), Interval: time.Hour}
+	runner := NewRunner(client, home, t.TempDir(), time.Hour)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	done := make(chan error, 1)
@@ -148,7 +148,7 @@ func TestWatchWaitsFullIntervalAfterSlowRefresh(t *testing.T) {
 	// have a pending tick and start the next pass immediately after publishing.
 	t.Setenv("WATCH_TEST_PUBLISH_DELAY", "0.1")
 	const interval = 40 * time.Millisecond
-	runner := Runner{Herdr: client, CodexHome: home, StateDir: t.TempDir(), Interval: interval}
+	runner := NewRunner(client, home, t.TempDir(), interval)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := runner.Watch(ctx, "pane"); err != nil {
