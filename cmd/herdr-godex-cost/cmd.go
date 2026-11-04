@@ -46,6 +46,7 @@ func newCommand() *cli.Command {
 			{Name: "refresh", Usage: "Refresh the cost for one pane", Action: refreshAction},
 			{Name: "watch", Usage: "Refresh while a Codex pane is working", Action: watchAction},
 			{Name: "event", Usage: "Handle a Herdr agent-status event", Action: eventAction},
+			{Name: "display", Usage: "Select dollars or estimated credits for all Codex panes", Flags: []cli.Flag{&cli.StringFlag{Name: "mode", Required: true, Usage: "cost or credit"}}, Action: displayAction},
 			{Name: "startup", Usage: "Refresh existing panes and start active workers", Action: startupAction},
 		},
 	}

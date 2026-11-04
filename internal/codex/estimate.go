@@ -13,16 +13,28 @@ const (
 
 // Retains known costs even when some records cannot be priced.
 type Estimate struct {
-	KnownUSD     float64
-	EstimatedUSD float64
-	HasUsage     bool
-	Incomplete   bool
+	Credits           float64
+	CreditsIncomplete bool
+	KnownUSD          float64
+	EstimatedUSD      float64
+	HasUsage          bool
+	Incomplete        bool
 }
 
 func NewEstimate(incomplete bool) *Estimate {
 	return &Estimate{
 		Incomplete: incomplete,
 	}
+}
+
+// Add combines another session's amounts and preserves usage and completeness flags.
+func (estimate *Estimate) Add(other Estimate) {
+	estimate.Credits += other.Credits
+	estimate.CreditsIncomplete = estimate.CreditsIncomplete || other.CreditsIncomplete
+	estimate.KnownUSD += other.KnownUSD
+	estimate.EstimatedUSD += other.EstimatedUSD
+	estimate.HasUsage = estimate.HasUsage || other.HasUsage
+	estimate.Incomplete = estimate.Incomplete || other.Incomplete
 }
 
 // TotalUSD includes both normally priced usage and estimated auto-review costs.
@@ -39,6 +51,18 @@ func (estimate Estimate) String() string {
 		prefix = "~"
 	}
 	return fmt.Sprintf("%s$%.2f", prefix, estimate.TotalUSD())
+}
+
+// CreditString estimates Standard-speed credit usage; it is not an account balance.
+func (estimate Estimate) CreditString() string {
+	if !estimate.HasUsage {
+		return "…"
+	}
+	suffix := ""
+	if estimate.Incomplete || estimate.CreditsIncomplete {
+		suffix = " (partial)"
+	}
+	return fmt.Sprintf("~%.2f credits%s", estimate.Credits, suffix)
 }
 
 // Prices each event using its active model and request counters.
@@ -69,6 +93,16 @@ func (usage *RolloutUsage) Estimate() Estimate {
 			continue
 		}
 		model := normalizeModel(event.Model)
+		if creditRates, ok := creditRatesByModel[model]; ok {
+			credits, creditErr := billable.CostUSD(creditRates)
+			if creditErr != nil {
+				result.CreditsIncomplete = true
+			} else {
+				result.Credits += credits
+			}
+		} else {
+			result.CreditsIncomplete = true
+		}
 		rates, err := RatesForModel(model)
 		estimated := model == "codex-auto-review"
 		if estimated {

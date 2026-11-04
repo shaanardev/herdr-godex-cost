@@ -20,3 +20,13 @@ command = ["./bin/herdr-godex-cost", "refresh"]
 [[events]]
 on = "pane.agent_status_changed"
 command = ["./bin/herdr-godex-cost", "event"]
+
+[[actions]]
+id = "show-credits"
+title = "Show estimated credits"
+command = ["./bin/herdr-godex-cost", "display", "--mode", "credit"]
+
+[[actions]]
+id = "show-cost"
+title = "Show dollar cost"
+command = ["./bin/herdr-godex-cost", "display", "--mode", "cost"]

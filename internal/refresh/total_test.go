@@ -88,6 +88,26 @@ esac
 	if cached.Value == nil || cached.Value.KnownUSD != 7.5 || cached.Value.EstimatedUSD != .8 {
 		t.Fatalf("cached cost categories are incorrect: %+v", cached.Value)
 	}
+	// The same runner and cached tree must respect a persisted display change.
+	for _, mode := range []string{"credit", "cost"} {
+		if err := SetDisplayMode(state, mode); err != nil {
+			t.Fatal(err)
+		}
+		if err := runner.Refresh(context.Background(), "pane"); err != nil {
+			t.Fatal(err)
+		}
+		content, err = os.ReadFile(reports)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := "cost=$8.30\n"
+		if mode == "credit" {
+			want = "cost=~187.50 credits (partial)\n"
+		}
+		if !strings.HasSuffix(string(content), want) {
+			t.Fatalf("mode %s: %s", mode, content)
+		}
+	}
 	// If a descendant has unknown pricing, keep the priced subtotal visibly partial.
 	path := filepath.Join(sessions, "rollout-grandchild.jsonl")
 	if err := os.WriteFile(path, []byte(strings.ReplaceAll(rollouts["grandchild"], "gpt-6.1-terra", "unknown")), 0600); err != nil {

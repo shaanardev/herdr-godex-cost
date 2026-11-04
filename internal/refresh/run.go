@@ -80,6 +80,10 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 	if pane.Agent != "codex" {
 		return nil
 	}
+	mode, err := ReadDisplayMode(runner.StateDir)
+	if err != nil {
+		return err
+	}
 	index, err := runner.sessionIndex(ctx)
 	if err != nil {
 		return err
@@ -141,11 +145,7 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 				slog.Warn("read rollout", "path", session.RolloutPath, "error", readErr)
 				continue
 			}
-			item := usage.Estimate()
-			estimate.KnownUSD += item.KnownUSD
-			estimate.EstimatedUSD += item.EstimatedUSD
-			estimate.HasUsage = estimate.HasUsage || item.HasUsage
-			estimate.Incomplete = estimate.Incomplete || item.Incomplete
+			estimate.Add(usage.Estimate())
 		}
 		// Retry damaged files on the next pass, even if their stat data is unchanged.
 		if !estimate.Incomplete {
@@ -155,6 +155,9 @@ func (runner Runner) refreshPane(ctx context.Context, paneID string, pane *herde
 		}
 	}
 	display := estimate.String()
+	if mode == "credit" {
+		display = estimate.CreditString()
+	}
 	if display == "…" && pane.Tokens["cost"] != "" && pane.Tokens["cost"] != "…" {
 		return nil
 	}
