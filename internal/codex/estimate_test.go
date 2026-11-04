@@ -93,3 +93,26 @@ func TestLongContextPricingBoundaries(t *testing.T) {
 		})
 	}
 }
+
+func TestEstimateDisplaysOneTotalIncludingAutoReview(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		estimate Estimate
+		want     string
+		total    float64
+	}{
+		{"session plus review", Estimate{KnownUSD: 3, EstimatedUSD: 1, HasUsage: true}, "$4.00", 4},
+		{"review alone", Estimate{EstimatedUSD: 1, HasUsage: true}, "$1.00", 1},
+		{"partial total", Estimate{KnownUSD: 3, EstimatedUSD: 1, HasUsage: true, Incomplete: true}, "~$4.00", 4},
+		{"no usage", Estimate{}, "…", 0},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := test.estimate.TotalUSD(); got != test.total {
+				t.Fatalf("total=%g; want %g", got, test.total)
+			}
+			if got := test.estimate.String(); got != test.want {
+				t.Fatalf("display=%q; want %q", got, test.want)
+			}
+		})
+	}
+}

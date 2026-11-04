@@ -25,6 +25,11 @@ func NewEstimate(incomplete bool) *Estimate {
 	}
 }
 
+// TotalUSD includes both normally priced usage and estimated auto-review costs.
+func (estimate Estimate) TotalUSD() float64 {
+	return estimate.KnownUSD + estimate.EstimatedUSD
+}
+
 func (estimate Estimate) String() string {
 	if !estimate.HasUsage {
 		return "…"
@@ -33,10 +38,7 @@ func (estimate Estimate) String() string {
 	if estimate.Incomplete {
 		prefix = "~"
 	}
-	if estimate.EstimatedUSD != 0 {
-		return fmt.Sprintf("%s$%.2f(+$%.2f)", prefix, estimate.KnownUSD, estimate.EstimatedUSD)
-	}
-	return fmt.Sprintf("%s$%.2f", prefix, estimate.KnownUSD)
+	return fmt.Sprintf("%s$%.2f", prefix, estimate.TotalUSD())
 }
 
 // Prices each event using its active model and request counters.

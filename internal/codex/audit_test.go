@@ -51,7 +51,7 @@ func TestEstimateDisplayStates(t *testing.T) {
 	}{
 		{*NewEstimate(false), "…"}, {newEstimate(1.25, 0, true, false), "$1.25"},
 		{newEstimate(1.25, 0, true, true), "~$1.25"},
-		{newEstimate(1.25, .5, true, false), "$1.25(+$0.50)"},
+		{newEstimate(1.25, .5, true, false), "$1.75"},
 	} {
 		if got := test.estimate.String(); got != test.want {
 			t.Errorf("display %q; want %q", got, test.want)
