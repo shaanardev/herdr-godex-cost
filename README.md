@@ -1,5 +1,7 @@
 # Herdr Codex Cost
 
+[![MIT license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 See estimated usage for each Codex pane in Herdr, including its nested
 subagents. Choose API-equivalent dollar cost or Standard-speed credit estimates
 calculated from local Codex session data. Dollar cost is the default.
@@ -185,13 +187,4 @@ problem and how you verified the fix.
 This Go implementation was developed with reference to
 [Coolsik/herdr-codex-cost](https://github.com/Coolsik/herdr-codex-cost).
 The [pricing test fixture](internal/codex/testdata/pricing.json) records its
-source revision. This README describes this implementation in original wording.
-
-Original contributions are licensed under the [MIT License](LICENSE), which
-permits commercial use, modification, and redistribution subject to preserving
-its copyright and license notices.
-
-The referenced project has no declared license as of November 5, 2026. The
-pricing fixtures above retain their source attribution; permission to reuse
-upstream material remains unresolved. This project's MIT license does not grant
-rights to third-party material that its copyright holders have not licensed.
+source revision.
