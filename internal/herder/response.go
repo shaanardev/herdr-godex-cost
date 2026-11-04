@@ -2,7 +2,7 @@ package herder
 
 type CLIResponse[T any] struct {
 	ID     string `json:"id"`
-	Result T      `json:"result"`
+	Result *T     `json:"result"`
 }
 
 type AgentListResult struct {
@@ -40,8 +40,14 @@ type WorkspaceInfo struct {
 }
 
 type PaneInfo struct {
-	PaneID      string `json:"pane_id"`
-	WorkspaceID string `json:"workspace_id"`
+	Agent        string            `json:"agent"`
+	AgentStatus  string            `json:"agent_status"`
+	CWD          string            `json:"cwd"`
+	Title        string            `json:"title"`
+	Tokens       map[string]string `json:"tokens"`
+	AgentSession *AgentSessionInfo `json:"agent_session"`
+	PaneID       string            `json:"pane_id"`
+	WorkspaceID  string            `json:"workspace_id"`
 }
 
 type ProcessInfoResult struct {

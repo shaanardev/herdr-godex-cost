@@ -3,40 +3,53 @@ package codex
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 )
 
-type queryer interface {
-	QueryContext(context.Context, string, ...any) (*sql.Rows, error)
-}
+var (
+	ErrNilSessionIndex = errors.New("Codex session index is nil")
+	ErrEmptyCodexHome  = errors.New("Codex home is empty")
+)
 
-// SessionIndex maps Codex thread IDs to rollout files and tracks child threads.
+// Maps Codex thread IDs to rollout files and tracks child threads.
 type SessionIndex struct {
-	db           queryer
+	// Diagnostics records damaged metadata skipped while building the index.
+	Diagnostics  []error
+	db           *sql.DB
 	home         string
 	files        map[string]string
+	ambiguous    map[string]struct{}
+	metadata     map[string]SessionMetadata
 	children     sessionGraph
 	databaseSeen bool
 	edgesIndexed bool
 }
 
-// NewSessionIndex builds an index using a caller-owned, read-only database.
+func (index *SessionIndex) addDiagnostic(err error) {
+	index.Diagnostics = append(index.Diagnostics, err)
+}
+
+// NewSessionIndex builds an index using an optional caller-owned, read-only database.
+// A nil database uses rollout metadata instead.
 // The caller remains responsible for closing db.
 func NewSessionIndex(ctx context.Context, db *sql.DB, codexHome string) (*SessionIndex, error) {
-	if db == nil {
-		return nil, fmt.Errorf("Codex state database is nil")
-	}
 	if codexHome == "" {
-		return nil, fmt.Errorf("Codex home is empty")
+		return nil, ErrEmptyCodexHome
 	}
 
 	index := &SessionIndex{
-		db:       db,
-		home:     codexHome,
-		files:    make(map[string]string),
-		children: sessionGraph{},
+		db:        db,
+		home:      codexHome,
+		files:     make(map[string]string),
+		ambiguous: make(map[string]struct{}),
+		metadata:  make(map[string]SessionMetadata),
+		children:  sessionGraph{},
 	}
 	if err := index.populate(ctx); err != nil {
 		return nil, err
@@ -44,16 +57,22 @@ func NewSessionIndex(ctx context.Context, db *sql.DB, codexHome string) (*Sessio
 	return index, nil
 }
 
-// RolloutPath returns the indexed rollout path for a thread, if present.
-func (index *SessionIndex) RolloutPath(threadID string) (string, bool) {
+// Returns the indexed rollout path for a thread, if present.
+func (index *SessionIndex) RolloutPath(threadID string) (string, error) {
 	if index == nil {
-		return "", false
+		return "", ErrNilSessionIndex
 	}
-	path, ok := index.files[threadID]
-	return path, ok
+	if _, ambiguous := index.ambiguous[threadID]; ambiguous {
+		return "", ErrAmbiguousRollout
+	}
+	path, exists := index.files[threadID]
+	if !exists {
+		return "", ErrRolloutNotFound
+	}
+	return path, nil
 }
 
-// ChildrenOf returns the indexed child thread IDs in stable sorted order.
+// Returns indexed child thread IDs in stable sorted order.
 func (index *SessionIndex) ChildrenOf(parentID string) []string {
 	if index == nil {
 		return nil
@@ -61,9 +80,37 @@ func (index *SessionIndex) ChildrenOf(parentID string) []string {
 	return index.children.childrenOf(parentID)
 }
 
+// Returns verified indexed session IDs whose recorded working directory
+// matches cwd. It does not scan rollout directories; metadata is captured as
+// the index is populated.
+func (index *SessionIndex) SessionIDsByCWD(cwd string) []string {
+	if index == nil || strings.TrimSpace(cwd) == "" {
+		return nil
+	}
+	wanted := filepath.Clean(strings.TrimSpace(cwd))
+	if resolved, err := filepath.EvalSymlinks(wanted); err == nil {
+		wanted = resolved
+	}
+	var matches []string
+	for id, metadata := range index.metadata {
+		metadataCWD := filepath.Clean(strings.TrimSpace(metadata.CWD))
+		if resolved, err := filepath.EvalSymlinks(metadataCWD); err == nil {
+			metadataCWD = resolved
+		}
+		_, ambiguous := index.ambiguous[id]
+		if _, hasRollout := index.files[id]; hasRollout && !ambiguous && metadataCWD == wanted {
+			matches = append(matches, id)
+		}
+	}
+	slices.Sort(matches)
+	return matches
+}
+
 func (index *SessionIndex) populate(ctx context.Context) error {
-	if err := index.indexStateDatabase(ctx); err != nil {
-		return fmt.Errorf("index Codex state database: %w", err)
+	if index.db != nil {
+		if err := index.indexStateDatabase(ctx); err != nil {
+			return fmt.Errorf("index Codex state database: %w", err)
+		}
 	}
 	if index.edgesIndexed {
 		return nil
@@ -74,21 +121,51 @@ func (index *SessionIndex) populate(ctx context.Context) error {
 		return fmt.Errorf("find rollout metadata: %w", err)
 	}
 	for _, path := range candidates {
-		metadata, err := readSessionMetadata(path)
-		if err != nil || metadata == nil ||
-			!validSessionID.MatchString(metadata.ID) ||
-			!validSessionID.MatchString(metadata.ParentThreadID) {
+		safe, err := ResolveRolloutPath(path, index.home)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) {
+				continue
+			}
+			return err
+		}
+		metadata, err := ReadSessionMetadata(path)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			var syntax *json.SyntaxError
+			var fieldType *json.UnmarshalTypeError
+			if !errors.As(err, &syntax) && !errors.As(err, &fieldType) {
+				return err
+			}
+			index.addDiagnostic(err)
 			continue
 		}
-
-		safe, ok := isSafePath(path, index.home)
-		if !ok {
+		if metadata == nil || !ValidSessionID(metadata.ID) {
 			continue
 		}
-		index.files[metadata.ID] = safe
-		index.children.addEdge(metadata.ParentThreadID, metadata.ID)
+		index.addRollout(metadata.ID, safe, metadata)
+		if validSessionID.MatchString(metadata.ParentThreadID) {
+			index.children.addEdge(metadata.ParentThreadID, metadata.ID)
+		}
 	}
 	return nil
+}
+
+func (index *SessionIndex) addRollout(id, path string, metadata *SessionMetadata) {
+	if existing, exists := index.files[id]; exists && existing != path {
+		index.ambiguous[id] = struct{}{}
+		delete(index.files, id)
+		delete(index.metadata, id)
+		return
+	}
+	if _, ambiguous := index.ambiguous[id]; ambiguous {
+		return
+	}
+	index.files[id] = path
+	if metadata != nil {
+		index.metadata[id] = *metadata
+	}
 }
 
 func (index *SessionIndex) metadataCandidates() ([]string, error) {
@@ -106,9 +183,9 @@ func (index *SessionIndex) metadataCandidates() ([]string, error) {
 	}
 
 	var candidates []string
-	err := walkRolloutFiles(index.home, func(path string) (bool, error) {
+	err := walkRolloutFiles(index.home, func(path string) error {
 		candidates = append(candidates, path)
-		return true, nil
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -122,7 +199,9 @@ func (index *SessionIndex) indexStateDatabase(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if threadColumns["id"] && threadColumns["rollout_path"] {
+	_, hasThreadID := threadColumns["id"]
+	_, hasRolloutPath := threadColumns["rollout_path"]
+	if hasThreadID && hasRolloutPath {
 		index.databaseSeen = true
 		if err := index.readThreadRollouts(ctx); err != nil {
 			return err
@@ -133,7 +212,9 @@ func (index *SessionIndex) indexStateDatabase(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if edgeColumns["parent_thread_id"] && edgeColumns["child_thread_id"] {
+	_, hasParentThreadID := edgeColumns["parent_thread_id"]
+	_, hasChildThreadID := edgeColumns["child_thread_id"]
+	if hasParentThreadID && hasChildThreadID {
 		index.databaseSeen = true
 		index.edgesIndexed = true
 		if err := index.readThreadEdges(ctx); err != nil {
@@ -143,7 +224,7 @@ func (index *SessionIndex) indexStateDatabase(ctx context.Context) error {
 	return nil
 }
 
-func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[string]bool, error) {
+func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[string]struct{}, error) {
 	// table comes from the fixed schema table names used above.
 	rows, err := index.db.QueryContext(ctx, "PRAGMA table_info("+table+")")
 	if err != nil {
@@ -151,7 +232,7 @@ func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[
 	}
 	defer rows.Close()
 
-	columns := make(map[string]bool)
+	columns := make(map[string]struct{})
 	for rows.Next() {
 		var cid, notNull, primaryKey int
 		var name, columnType string
@@ -159,7 +240,7 @@ func (index *SessionIndex) tableColumns(ctx context.Context, table string) (map[
 		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
 			return nil, err
 		}
-		columns[name] = true
+		columns[name] = struct{}{}
 	}
 	return columns, rows.Err()
 }
@@ -179,15 +260,31 @@ func (index *SessionIndex) readThreadRollouts(ctx context.Context) error {
 		if !threadID.Valid || !rawPath.Valid || !validSessionID.MatchString(threadID.String) {
 			continue
 		}
-		path, ok := isSafePath(rawPath.String, index.home)
-		if !ok {
-			continue
+		path, err := ResolveRolloutPath(rawPath.String, index.home)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) || errors.Is(err, ErrUnsafeRolloutPath) {
+				continue
+			}
+			return err
 		}
 		info, err := os.Stat(path)
-		if err != nil || !info.Mode().IsRegular() {
+		if errors.Is(err, os.ErrNotExist) {
 			continue
 		}
-		index.files[threadID.String] = path
+		if err != nil {
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			continue
+		}
+		metadata, metadataErr := ReadSessionMetadata(path)
+		if metadataErr != nil {
+			index.addDiagnostic(metadataErr)
+		}
+		if metadataErr != nil || metadata == nil || metadata.ID != threadID.String {
+			metadata = nil
+		}
+		index.addRollout(threadID.String, path, metadata)
 	}
 	return rows.Err()
 }
